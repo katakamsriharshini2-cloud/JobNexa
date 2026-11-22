@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { stripHtml, extractSkills, normalizeLocation, categorizeJobTitle } from '../utils/deduplicateJobs.js';
+import {
+  stripHtml,
+  extractSkills,
+  normalizeLocation,
+  categorizeJobTitle,
+  normalizeSalaryINR,
+} from '../utils/deduplicateJobs.js';
 
 const REMOTIVE_API_URL = 'https://remotive.com/api/remote-jobs?limit=50';
 
@@ -28,20 +34,20 @@ export const fetchRemotiveJobs = async (maxResults = 50) => {
     const formattedJobs = rawListings.map((item) => {
       const cleanDesc = stripHtml(item.description);
       const skills = extractSkills(`${item.title} ${cleanDesc}`, item.tags || []);
-      const locInfo = normalizeLocation(item.candidate_required_location || 'Remote', true);
       const category = categorizeJobTitle(item.title);
+      const locInfo = normalizeLocation(item.candidate_required_location || 'Remote', true, item.title);
 
       return {
         title: item.title,
-        companyName: item.company_name || 'Leading Tech Firm',
-        description: cleanDesc || 'Remote software opportunity with global hiring capability.',
+        companyName: item.company_name || 'Global Enterprise India',
+        description: cleanDesc || 'Remote software opportunity with Indian candidate hiring capability.',
         category,
         requiredSkills: skills,
         location: locInfo.location,
         city: locInfo.city,
-        country: locInfo.country,
+        country: 'India',
         isRemote: true,
-        salaryRange: item.salary ? item.salary.trim() : 'Competitive Tech Compensation',
+        salaryRange: normalizeSalaryINR(item.salary, category),
         jobType: item.job_type === 'contract' ? 'Contract' : item.job_type === 'internship' ? 'Internship' : 'Remote',
         experienceLevel: 'Fresher / Entry-Level',
         vacancies: 1,

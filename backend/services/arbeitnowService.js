@@ -1,5 +1,11 @@
 import axios from 'axios';
-import { stripHtml, extractSkills, normalizeLocation, categorizeJobTitle } from '../utils/deduplicateJobs.js';
+import {
+  stripHtml,
+  extractSkills,
+  normalizeLocation,
+  categorizeJobTitle,
+  normalizeSalaryINR,
+} from '../utils/deduplicateJobs.js';
 
 const ARBEITNOW_API_URL = 'https://www.arbeitnow.com/api/job-board-api';
 
@@ -28,20 +34,20 @@ export const fetchArbeitnowJobs = async (maxResults = 50) => {
     const formattedJobs = rawListings.map((item) => {
       const cleanDesc = stripHtml(item.description);
       const skills = extractSkills(`${item.title} ${cleanDesc}`, item.tags || []);
-      const locInfo = normalizeLocation(item.location, item.remote);
       const category = categorizeJobTitle(item.title);
+      const locInfo = normalizeLocation(item.location, item.remote, item.title);
 
       return {
         title: item.title,
-        companyName: item.company_name || 'Global Tech Partner',
+        companyName: item.company_name || 'Tech Innovators India',
         description: cleanDesc || 'Exciting engineering role sourced directly from verified job board.',
         category,
         requiredSkills: skills,
         location: locInfo.location,
         city: locInfo.city,
-        country: locInfo.country,
+        country: 'India',
         isRemote: locInfo.isRemote,
-        salaryRange: 'Market Competitive',
+        salaryRange: normalizeSalaryINR('', category),
         jobType: locInfo.isRemote ? 'Remote' : 'Full-time',
         experienceLevel: 'Fresher / Entry-Level',
         vacancies: 1,

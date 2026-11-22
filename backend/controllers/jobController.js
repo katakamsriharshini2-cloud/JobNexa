@@ -40,8 +40,33 @@ export const getJobs = async (req, res, next) => {
       ];
     }
 
-    if (location) {
-      query.location = { $regex: location, $options: 'i' };
+    if (location && location.trim() !== '') {
+      const trimmedLoc = location.trim();
+      if (trimmedLoc.toLowerCase() === 'remote') {
+        const remoteConditions = [
+          { isRemote: true },
+          { location: { $regex: 'remote', $options: 'i' } },
+          { jobType: 'Remote' },
+        ];
+        if (query.$or) {
+          query.$and = [{ $or: query.$or }, { $or: remoteConditions }];
+          delete query.$or;
+        } else {
+          query.$or = remoteConditions;
+        }
+      } else {
+        const locRegex = new RegExp(trimmedLoc, 'i');
+        const locConditions = [
+          { location: locRegex },
+          { city: locRegex },
+        ];
+        if (query.$or) {
+          query.$and = [{ $or: query.$or }, { $or: locConditions }];
+          delete query.$or;
+        } else {
+          query.$or = locConditions;
+        }
+      }
     }
 
     if (jobType) {

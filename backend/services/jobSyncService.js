@@ -5,6 +5,7 @@ import { fetchArbeitnowJobs } from './arbeitnowService.js';
 import { fetchRemotiveJobs } from './remotiveService.js';
 import { fetchAdzunaJobs } from './adzunaService.js';
 import { fetchJoobleJobs } from './joobleService.js';
+import { getCuratedIndianJobs } from './indianTechJobsService.js';
 import { deduplicateJobBatch } from '../utils/deduplicateJobs.js';
 import { calculateJobMatch } from '../utils/calculateJobMatch.js';
 
@@ -41,6 +42,11 @@ export const syncAllJobs = async (options = {}) => {
   if (remotiveRes.status === 'fulfilled') rawJobs.push(...remotiveRes.value);
   if (adzunaRes.status === 'fulfilled') rawJobs.push(...adzunaRes.value);
   if (joobleRes.status === 'fulfilled') rawJobs.push(...joobleRes.value);
+
+  // Guarantee high-volume Indian tech hub vacancies
+  const curatedIndianJobs = getCuratedIndianJobs();
+  rawJobs.push(...curatedIndianJobs);
+  sourceStats.indianTechHubs = curatedIndianJobs.length;
 
   console.log(`[JobNexa Sync Engine] Total raw jobs gathered: ${rawJobs.length}`);
 

@@ -128,7 +128,13 @@ const jobSchema = new mongoose.Schema(
 );
 
 // Compound index to ensure uniqueness for external jobs from specific sources
-jobSchema.index({ source: 1, externalId: 1 }, { unique: true, sparse: true });
+jobSchema.index(
+  { source: 1, externalId: 1 },
+  {
+    unique: true,
+    partialFilterExpression: { isExternal: true, externalId: { $type: 'string' } },
+  }
+);
 
 // Multi-field text index for high-speed full-text searching
 jobSchema.index(

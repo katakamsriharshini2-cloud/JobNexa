@@ -123,7 +123,7 @@ const FindJobs = () => {
         {/* Priority Indian Cities & Remote Quick Filter Pills */}
         <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
           <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">Trending Tech Hubs:</span>
-          {['All', 'Hyderabad', 'Warangal', 'Bengaluru', 'Chennai', 'Mumbai', 'Remote'].map((city) => {
+          {['All', 'Hyderabad', 'Warangal', 'Bengaluru', 'Chennai', 'Mumbai', 'Pune', 'Delhi NCR', 'Remote'].map((city) => {
             const isSelected = city === 'All' ? !location : location.toLowerCase() === city.toLowerCase();
             return (
               <button
