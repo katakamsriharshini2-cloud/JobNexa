@@ -41,6 +41,38 @@ const JobDetails = () => {
   const [applyError, setApplyError] = useState('');
   const [hasApplied, setHasApplied] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+
+  // Clean raw HTML tags and compute concise short description
+  const cleanedDescription = React.useMemo(() => {
+    if (!job?.description) return '';
+    return job.description
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/&amp;/gi, '&')
+      .replace(/&quot;/gi, '"')
+      .replace(/&#39;/gi, "'")
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/<style[^>]*>[\s\S]*?<\/style>/gi, '')
+      .replace(/<script[^>]*>[\s\S]*?<\/script>/gi, '')
+      .replace(/<br\s*[\/]?>/gi, '\n')
+      .replace(/<\/(p|div|h[1-6]|li)>/gi, '\n')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/[ \t]+/g, ' ')
+      .replace(/\n\s*\n\s*\n+/g, '\n\n')
+      .trim();
+  }, [job?.description]);
+
+  const shortDescription = React.useMemo(() => {
+    if (!cleanedDescription) return '';
+    if (cleanedDescription.length <= 420) return cleanedDescription;
+    const slice = cleanedDescription.slice(0, 420);
+    const lastPeriod = slice.lastIndexOf('.');
+    if (lastPeriod > 180) {
+      return slice.slice(0, lastPeriod + 1).trim();
+    }
+    return slice.trim() + '...';
+  }, [cleanedDescription]);
 
   useEffect(() => {
     const fetchJob = async () => {
@@ -221,14 +253,28 @@ const JobDetails = () => {
         {/* Left Column: Description, Requirements, Skills */}
         <div className="lg:col-span-2 space-y-6">
           
-          {/* Job Overview */}
+          {/* Job Overview & Short Description */}
           <div className="bg-white dark:bg-slate-800 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white border-b border-slate-100 dark:border-slate-700 pb-3">
-              Job Description
-            </h2>
-            <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
-              {job.description}
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <h2 className="text-lg font-bold text-slate-900 dark:text-white">
+                Job Overview & Role Summary
+              </h2>
+              <span className="text-xs px-2.5 py-1 rounded-full font-bold bg-blue-50 dark:bg-blue-950/40 text-blue-600 dark:text-blue-300 border border-blue-200 dark:border-blue-800">
+                Short Description
+              </span>
             </div>
+            <div className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed whitespace-pre-line">
+              {isExpanded ? cleanedDescription : shortDescription}
+            </div>
+            {cleanedDescription.length > 420 && (
+              <button
+                type="button"
+                onClick={() => setIsExpanded(!isExpanded)}
+                className="text-xs font-bold text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300 inline-flex items-center space-x-1 pt-2 transition-colors"
+              >
+                <span>{isExpanded ? '▲ Show Short Summary' : '▼ Read Full Description'}</span>
+              </button>
+            )}
           </div>
 
           {/* Required Skills */}

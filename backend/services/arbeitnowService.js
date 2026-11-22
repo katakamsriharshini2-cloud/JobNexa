@@ -1,6 +1,7 @@
 import axios from 'axios';
 import {
   stripHtml,
+  generateShortDescription,
   extractSkills,
   normalizeLocation,
   categorizeJobTitle,
@@ -40,7 +41,7 @@ export const fetchArbeitnowJobs = async (maxResults = 50) => {
       return {
         title: item.title,
         companyName: item.company_name || 'Tech Innovators India',
-        description: cleanDesc || 'Exciting engineering role sourced directly from verified job board.',
+        description: generateShortDescription(cleanDesc, 450),
         category,
         requiredSkills: skills,
         location: locInfo.location,
