@@ -4,6 +4,7 @@ import StudentProfile from '../models/StudentProfile.js';
 import JobAlert from '../models/JobAlert.js';
 import Notification from '../models/Notification.js';
 import { calculateJobMatch, normalizeSkill } from '../utils/calculateJobMatch.js';
+import { syncAllJobs } from '../services/jobSyncService.js';
 
 /**
  * @desc    Fetch all public jobs with filtering, search, and pagination
@@ -24,12 +25,18 @@ export const getJobs = async (req, res, next) => {
 
     const query = { isActive: true };
 
-    // Search by title, skills, company name, or description
-    if (keyword) {
+    // Search by title, skills, category, company name, or description
+    if (keyword && keyword.trim() !== '') {
+      const trimmed = keyword.trim();
+      const words = trimmed.split(/\s+/).filter(w => w.length > 2);
+      const regexPatterns = [new RegExp(trimmed, 'i'), ...words.map(w => new RegExp(w, 'i'))];
+
       query.$or = [
-        { title: { $regex: keyword, $options: 'i' } },
-        { companyName: { $regex: keyword, $options: 'i' } },
-        { requiredSkills: { $in: [new RegExp(keyword, 'i')] } },
+        { title: { $in: regexPatterns } },
+        { companyName: { $in: regexPatterns } },
+        { category: { $in: regexPatterns } },
+        { description: { $in: regexPatterns } },
+        { requiredSkills: { $in: regexPatterns } },
       ];
     }
 
@@ -43,6 +50,24 @@ export const getJobs = async (req, res, next) => {
 
     if (experienceLevel) {
       query.experienceLevel = experienceLevel;
+    }
+
+    if (req.query.city) {
+      query.city = { $regex: req.query.city, $options: 'i' };
+    }
+
+    if (req.query.isRemote !== undefined) {
+      query.isRemote = req.query.isRemote === 'true';
+    }
+
+    if (req.query.source) {
+      if (req.query.source === 'external') {
+        query.isExternal = true;
+      } else if (req.query.source === 'internal') {
+        query.isExternal = false;
+      } else {
+        query.source = req.query.source;
+      }
     }
 
     // Sort order

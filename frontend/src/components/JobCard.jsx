@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { MapPin, Briefcase, IndianRupee, Clock, Bookmark, Sparkles, Building2 } from 'lucide-react';
+import { MapPin, Briefcase, IndianRupee, Clock, Bookmark, Sparkles, Building2, Globe } from 'lucide-react';
 
 const JobCard = ({ job, isSaved = false, onToggleSave, showMatch = false }) => {
   return (
@@ -13,12 +13,21 @@ const JobCard = ({ job, isSaved = false, onToggleSave, showMatch = false }) => {
               <Building2 className="w-6 h-6" />
             </div>
             <div>
-              <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
-                {job.title}
-              </h3>
-              <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                {job.companyName || job.company?.name || 'Top Tech Firm'}
-              </p>
+              <div className="flex items-center space-x-2">
+                <h3 className="font-bold text-slate-900 dark:text-white text-lg group-hover:text-blue-600 dark:group-hover:text-blue-400 transition-colors line-clamp-1">
+                  {job.title}
+                </h3>
+              </div>
+              <div className="flex items-center space-x-2">
+                <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                  {job.companyName || job.company?.name || 'Top Tech Firm'}
+                </p>
+                {job.isExternal && (
+                  <span className="inline-flex items-center text-[10px] font-bold px-2 py-0.5 rounded-full bg-purple-50 dark:bg-purple-950/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 uppercase tracking-wider">
+                    {job.source || 'Live API'}
+                  </span>
+                )}
+              </div>
             </div>
           </div>
 

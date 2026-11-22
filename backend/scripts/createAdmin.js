@@ -37,7 +37,7 @@ const seedInitialData = async () => {
       console.log(`[JobNexa Seed] Updated existing Admin account: ${adminEmail}`);
     }
 
-    // 2. Seed Demo Recruiter if not present (for easy professor demo)
+    // 2. Seed Demo Recruiter
     const recruiterEmail = 'recruiter@jobnexa.dev';
     let recruiter = await User.findOne({ email: recruiterEmail });
     if (!recruiter) {
@@ -58,46 +58,112 @@ const seedInitialData = async () => {
         companyDescription: 'Leading enterprise cloud and full-stack software development partner.',
       });
       console.log(`[JobNexa Seed] Created demo Recruiter account: ${recruiterEmail}`);
-
-      // Seed 2 demo jobs for immediate display
-      const job1 = await Job.create({
-        title: 'Associate Full-Stack Engineer',
-        recruiter: recruiter._id,
-        companyName: 'NexaTech Global Labs',
-        description: `We are seeking motivated graduate engineers to join our dynamic web technologies engineering team.
-You will be architecting resilient REST APIs, crafting intuitive React single-page interfaces, and managing MongoDB Atlas databases.
-
-Responsibilities:
-• Develop modular frontend components in React and Tailwind CSS.
-• Write clean, testable Node.js / Express backend endpoints.
-• Collaborate on campus technology transformation projects.`,
-        requiredSkills: ['React', 'Node.js', 'Express', 'MongoDB', 'JavaScript'],
-        location: 'Bangalore, India (Hybrid)',
-        salaryRange: '₹8 - 12 LPA',
-        jobType: 'Full-time',
-        experienceLevel: 'Fresher / Entry-Level',
-        vacancies: 3,
-        deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
-      });
-
-      const job2 = await Job.create({
-        title: 'Junior React Frontend Developer',
-        recruiter: recruiter._id,
-        companyName: 'NexaTech Global Labs',
-        description: `Exciting opening for passionate frontend specialists with solid fundamentals in React hooks, responsive Tailwind styling, and asynchronous state handling.`,
-        requiredSkills: ['React', 'JavaScript', 'Tailwind CSS', 'Git', 'HTML5'],
-        location: 'Remote',
-        salaryRange: '₹6 - 9 LPA',
-        jobType: 'Remote',
-        experienceLevel: 'Fresher / Entry-Level',
-        vacancies: 2,
-        deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
-      });
-
-      console.log(`[JobNexa Seed] Created 2 sample active job postings.`);
     }
 
-    // 3. Seed Demo Student if not present
+    // 3. Ensure Sample Recruiter Jobs across all Popular Categories
+    const existingRecruiterJobCount = await Job.countDocuments({ isExternal: { $ne: true } });
+    if (existingRecruiterJobCount < 6) {
+      await Job.deleteMany({ isExternal: { $ne: true } }); // Refresh internal demo jobs without touching real external jobs
+      
+      const sampleJobs = [
+        {
+          title: 'Software Development Engineer (SDE-1)',
+          recruiter: recruiter._id,
+          companyName: 'NexaTech Global Labs',
+          category: 'Software Engineering',
+          description: `We are looking for an ambitious SDE-1 to design and build scalable web applications.
+Responsibilities:
+• Architect resilient backend APIs in Node.js and Express.
+• Integrate MongoDB Atlas databases with optimized indexing.
+• Build reusable, responsive React components with Tailwind CSS.`,
+          requiredSkills: ['React', 'JavaScript', 'Node.js', 'Express', 'MongoDB'],
+          location: 'Bangalore, India (Hybrid)',
+          salaryRange: '₹8 - 14 LPA',
+          jobType: 'Full-time',
+          experienceLevel: 'Fresher / Entry-Level',
+          vacancies: 4,
+          deadline: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: 'Frontend React & UI/UX Developer',
+          recruiter: recruiter._id,
+          companyName: 'Creative Pixel Systems',
+          category: 'Frontend & UI/UX',
+          description: `Join our design engineering team to craft delightful user interfaces and high-performance SPAs.
+Requirements:
+• Strong grasp of modern JavaScript (ES6+), React hooks, and Context API.
+• Expertise in responsive layout design using Tailwind CSS or CSS3.`,
+          requiredSkills: ['React', 'JavaScript', 'Tailwind CSS', 'HTML5', 'Git'],
+          location: 'Remote',
+          salaryRange: '₹6 - 10 LPA',
+          jobType: 'Remote',
+          experienceLevel: 'Fresher / Entry-Level',
+          vacancies: 3,
+          deadline: new Date(Date.now() + 25 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: 'Junior Machine Learning & Data Engineer',
+          recruiter: recruiter._id,
+          companyName: 'Cognitive Data Works',
+          category: 'Data & AI / ML',
+          description: `Looking for junior data engineers skilled in Python, data processing pipelines, and basic machine learning model integration.`,
+          requiredSkills: ['Python', 'SQL', 'MongoDB', 'Git', 'Data Structures'],
+          location: 'Hyderabad, India',
+          salaryRange: '₹7 - 12 LPA',
+          jobType: 'Full-time',
+          experienceLevel: 'Fresher / Entry-Level',
+          vacancies: 2,
+          deadline: new Date(Date.now() + 40 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: 'Cloud DevOps & Platform Associate',
+          recruiter: recruiter._id,
+          companyName: 'CloudSphere Technologies',
+          category: 'Cloud & DevOps',
+          description: `Work with CI/CD automation, cloud deployment on Render/AWS, containerization with Docker, and Linux server management.`,
+          requiredSkills: ['Docker', 'Git', 'Linux', 'AWS', 'Node.js'],
+          location: 'Pune, India (Hybrid)',
+          salaryRange: '₹8 - 13 LPA',
+          jobType: 'Full-time',
+          experienceLevel: '1-3 Years',
+          vacancies: 2,
+          deadline: new Date(Date.now() + 35 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: 'Cybersecurity & Application Security Analyst',
+          recruiter: recruiter._id,
+          companyName: 'SecureShield Defenses',
+          category: 'Cybersecurity',
+          description: `Monitor security headers, evaluate vulnerabilities, assess authentication protocols (JWT, bcrypt), and maintain defense postures.`,
+          requiredSkills: ['Cybersecurity', 'Linux', 'Python', 'Networking', 'Git'],
+          location: 'Bangalore, India',
+          salaryRange: '₹9 - 15 LPA',
+          jobType: 'Full-time',
+          experienceLevel: 'Fresher / Entry-Level',
+          vacancies: 2,
+          deadline: new Date(Date.now() + 45 * 24 * 60 * 60 * 1000),
+        },
+        {
+          title: 'Associate Technical Product Specialist',
+          recruiter: recruiter._id,
+          companyName: 'GrowthSync Enterprise',
+          category: 'Product & Tech Sales',
+          description: `Translate technical architecture into product solutions. Excellent verbal communication and understanding of web software stacks required.`,
+          requiredSkills: ['JavaScript', 'SQL', 'Git', 'Communication', 'Agile'],
+          location: 'Mumbai, India',
+          salaryRange: '₹7 - 11 LPA',
+          jobType: 'Full-time',
+          experienceLevel: 'Fresher / Entry-Level',
+          vacancies: 3,
+          deadline: new Date(Date.now() + 20 * 24 * 60 * 60 * 1000),
+        },
+      ];
+
+      await Job.insertMany(sampleJobs);
+      console.log(`[JobNexa Seed] Seeded ${sampleJobs.length} active jobs across all categories.`);
+    }
+
+    // 4. Seed Demo Student
     const studentEmail = 'student@jobnexa.dev';
     let student = await User.findOne({ email: studentEmail });
     if (!student) {
@@ -129,7 +195,7 @@ Responsibilities:
 
     console.log('====================================================');
     console.log('JOBNEXA DATABASE SEEDING COMPLETED SUCCESSFULLY!');
-    console.log('Accounts Ready for College Demonstration:');
+    console.log('Accounts Ready for Demonstration:');
     console.log('1. Admin:     admin@jobnexa.dev     / Admin@123');
     console.log('2. Recruiter: recruiter@jobnexa.dev / Recruiter@123');
     console.log('3. Student:   student@jobnexa.dev   / Student@123');

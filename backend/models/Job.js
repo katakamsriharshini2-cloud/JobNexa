@@ -11,7 +11,7 @@ const jobSchema = new mongoose.Schema(
     recruiter: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User',
-      required: true,
+      required: false, // Optional for external API jobs
       index: true,
     },
     companyName: {
@@ -25,15 +25,35 @@ const jobSchema = new mongoose.Schema(
       required: [true, 'Please provide job description'],
       trim: true,
     },
+    category: {
+      type: String,
+      default: 'Software Engineering',
+      index: true,
+    },
     requiredSkills: {
       type: [String],
-      required: [true, 'Please provide at least one required technical skill'],
+      default: [],
       index: true,
     },
     location: {
       type: String,
       required: [true, 'Please provide job location'],
       trim: true,
+      index: true,
+    },
+    city: {
+      type: String,
+      trim: true,
+      index: true, // Specific Indian cities: Hyderabad, Warangal, Bengaluru, Chennai, Mumbai
+    },
+    country: {
+      type: String,
+      default: 'India',
+      index: true,
+    },
+    isRemote: {
+      type: Boolean,
+      default: false,
       index: true,
     },
     salaryRange: {
@@ -69,14 +89,69 @@ const jobSchema = new mongoose.Schema(
       type: Number,
       default: 0,
     },
+    // ============================================================
+    // REAL-TIME EXTERNAL JOB INTEGRATION FIELDS
+    // ============================================================
+    isExternal: {
+      type: Boolean,
+      default: false,
+      index: true,
+    },
+    source: {
+      type: String,
+      enum: ['internal', 'arbeitnow', 'remotive', 'adzuna', 'jooble', 'other'],
+      default: 'internal',
+      index: true,
+    },
+    externalId: {
+      type: String,
+      trim: true,
+      index: true,
+    },
+    originalUrl: {
+      type: String,
+      trim: true,
+    },
+    postedAt: {
+      type: Date,
+      default: Date.now,
+      index: true,
+    },
+    lastSyncedAt: {
+      type: Date,
+      default: Date.now,
+    },
   },
   {
     timestamps: true,
   }
 );
 
-// Compound index for fast multi-field searching
-jobSchema.index({ title: 'text', description: 'text', companyName: 'text', requiredSkills: 'text' });
+// Compound index to ensure uniqueness for external jobs from specific sources
+jobSchema.index({ source: 1, externalId: 1 }, { unique: true, sparse: true });
+
+// Multi-field text index for high-speed full-text searching
+jobSchema.index(
+  {
+    title: 'text',
+    companyName: 'text',
+    category: 'text',
+    location: 'text',
+    requiredSkills: 'text',
+    description: 'text',
+  },
+  {
+    weights: {
+      title: 10,
+      requiredSkills: 8,
+      category: 6,
+      companyName: 5,
+      location: 4,
+      description: 1,
+    },
+    name: 'JobTextIndex',
+  }
+);
 
 const Job = mongoose.model('Job', jobSchema);
 export default Job;

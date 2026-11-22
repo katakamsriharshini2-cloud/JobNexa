@@ -3,6 +3,7 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import StudentProfile from '../models/StudentProfile.js';
 import RecruiterProfile from '../models/RecruiterProfile.js';
+import { syncAllJobs } from '../services/jobSyncService.js';
 
 /**
  * @desc    Get system-wide platform statistics and analytics
@@ -126,3 +127,67 @@ export const deleteUser = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Manually trigger real-time job synchronization from external APIs
+ * @route   POST /api/admin/sync-jobs
+ * @access  Private (Admin)
+ */
+export const triggerJobSync = async (req, res, next) => {
+  try {
+    const { limitPerSource = 50 } = req.body;
+    const result = await syncAllJobs({
+      limitPerSource: Number(limitPerSource),
+      triggerNotifications: true,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Job synchronization completed.',
+      data: result,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Get real-time job sync status & source distribution metrics
+ * @route   GET /api/admin/sync-status
+ * @access  Private (Admin)
+ */
+export const getSyncStatus = async (req, res, next) => {
+  try {
+    const totalJobs = await Job.countDocuments();
+    const externalJobs = await Job.countDocuments({ isExternal: true });
+    const internalJobs = await Job.countDocuments({ isExternal: false });
+
+    // Source breakdown
+    const sourceBreakdown = await Job.aggregate([
+      { $group: { _id: '$source', count: { $sum: 1 } } },
+    ]);
+
+    // Latest synced job
+    const latestExternalJob = await Job.findOne({ isExternal: true })
+      .sort({ lastSyncedAt: -1 })
+      .select('title companyName source postedAt lastSyncedAt');
+
+    res.status(200).json({
+      success: true,
+      data: {
+        totalJobs,
+        externalJobs,
+        internalJobs,
+        sourceBreakdown: sourceBreakdown.reduce((acc, curr) => {
+          acc[curr._id || 'unknown'] = curr.count;
+          return acc;
+        }, {}),
+        latestExternalJob,
+        syncSchedule: process.env.SYNC_CRON_SCHEDULE || '0 */6 * * *',
+      },
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+

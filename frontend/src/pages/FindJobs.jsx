@@ -119,6 +119,36 @@ const FindJobs = () => {
         <div className="pt-4">
           <SearchBar onSearch={handleSearch} initialValues={{ keyword, location, jobType }} />
         </div>
+
+        {/* Priority Indian Cities & Remote Quick Filter Pills */}
+        <div className="flex flex-wrap items-center justify-center gap-2 pt-2">
+          <span className="text-xs font-semibold text-slate-500 dark:text-slate-400 mr-1">Trending Tech Hubs:</span>
+          {['All', 'Hyderabad', 'Warangal', 'Bengaluru', 'Chennai', 'Mumbai', 'Remote'].map((city) => {
+            const isSelected = city === 'All' ? !location : location.toLowerCase() === city.toLowerCase();
+            return (
+              <button
+                key={city}
+                onClick={() => {
+                  setPage(1);
+                  const newParams = new URLSearchParams(searchParams);
+                  if (city === 'All') {
+                    newParams.delete('location');
+                  } else {
+                    newParams.set('location', city);
+                  }
+                  setSearchParams(newParams);
+                }}
+                className={`text-xs px-3 py-1.5 rounded-full font-bold transition-all ${
+                  isSelected
+                    ? 'bg-blue-600 text-white shadow-md shadow-blue-500/25'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-700 hover:border-blue-300'
+                }`}
+              >
+                {city}
+              </button>
+            );
+          })}
+        </div>
       </div>
 
       {/* Filter / Sort bar */}

@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorMiddleware.js';
+import { initJobSyncCron } from './jobs/syncCron.js';
 
 // Route imports
 import authRoutes from './routes/authRoutes.js';
@@ -138,6 +139,9 @@ connectDB().then(() => {
     console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
     console.log(`🌐 Environment:  ${process.env.NODE_ENV || 'development'}`);
     console.log(`====================================================`);
+
+    // Initialize real-time job synchronization cron engine
+    initJobSyncCron();
   });
 });
 

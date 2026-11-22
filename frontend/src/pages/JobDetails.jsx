@@ -19,6 +19,7 @@ import {
   FileText,
   ArrowLeft,
   Send,
+  ExternalLink,
   X
 } from 'lucide-react';
 
@@ -192,6 +193,16 @@ const JobDetails = () => {
             <div className="text-xs font-semibold text-slate-400 px-4 py-2 border border-slate-200 dark:border-slate-700 rounded-xl">
               Logged in as {user.role}
             </div>
+          ) : job.isExternal && job.originalUrl ? (
+            <a
+              href={job.originalUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="px-8 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-black text-sm rounded-2xl shadow-xl shadow-blue-500/25 hover:scale-105 transition-all flex items-center space-x-2"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span>Apply on {job.source ? job.source.toUpperCase() : 'Official Site'}</span>
+            </a>
           ) : (
             <button
               onClick={handleOpenApplyModal}
