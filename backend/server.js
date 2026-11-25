@@ -68,7 +68,43 @@ app.use(
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// Rate limiting (150 requests per 15 minutes)
+// ============================================================
+// HEALTH CHECK ENDPOINTS (REGISTERED BEFORE RATE LIMITER & 404)
+// Supported on /api/health, /health, and root /
+// ============================================================
+const healthCheckHandler = (req, res) => {
+  const isConnected = mongoose.connection.readyState === 1;
+  const dbStatus = isConnected
+    ? 'Connected'
+    : mongoose.connection.readyState === 2
+    ? 'Connecting'
+    : 'Disconnected';
+
+  const responsePayload = {
+    status: isConnected ? 'OK' : 'ERROR',
+    application: 'JobNexa - Connect. Apply. Achieve.',
+    version: '1.0.0',
+    database: dbStatus,
+    environment: process.env.NODE_ENV || 'development',
+  };
+
+  res.status(isConnected ? 200 : 503).json(responsePayload);
+};
+
+// Mount health check on multiple common routes to avoid 404s
+app.get('/api/health', healthCheckHandler);
+app.get('/health', healthCheckHandler);
+app.get('/', healthCheckHandler);
+
+// Root API Welcome endpoint
+app.get('/api', (req, res) => {
+  res.status(200).json({
+    message: 'Welcome to JobNexa REST API. Connect. Apply. Achieve.',
+    health: '/api/health',
+  });
+});
+
+// Rate limiting (150 requests per 15 minutes) - placed AFTER health check
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
   max: 150,
@@ -84,36 +120,6 @@ app.use('/api', limiter);
 // Serve local uploads folder statically for resume fallback
 app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 
-// ============================================================
-// HEALTH CHECK ENDPOINT (MANDATORY REQUIREMENT FOR RENDER)
-// ============================================================
-app.get('/api/health', (req, res) => {
-  const isConnected = mongoose.connection.readyState === 1;
-  const dbStatus = isConnected
-    ? 'Connected'
-    : mongoose.connection.readyState === 2
-    ? 'Connecting'
-    : 'Disconnected';
-
-  res.status(isConnected ? 200 : 503).json({
-    status: isConnected ? 'OK' : 'DEGRADED',
-    application: 'JobNexa – Connect. Apply. Achieve.',
-    version: '1.0.0',
-    timestamp: new Date().toISOString(),
-    uptimeSeconds: Math.floor(process.uptime()),
-    database: dbStatus,
-    environment: process.env.NODE_ENV || 'development',
-  });
-});
-
-// Root API Welcome
-app.get('/api', (req, res) => {
-  res.status(200).json({
-    message: 'Welcome to JobNexa REST API. Connect. Apply. Achieve.',
-    docs: '/api/health',
-  });
-});
-
 // Mount Routes (Routes requiring database use ensureDbConnected to prevent buffering timeout)
 app.use('/api/auth', ensureDbConnected, authRoutes);
 app.use('/api/students', ensureDbConnected, studentRoutes);
@@ -126,11 +132,16 @@ app.use('/api/saved-jobs', ensureDbConnected, savedJobRoutes);
 app.use('/api/job-alerts', ensureDbConnected, jobAlertRoutes);
 app.use('/api/admin', ensureDbConnected, adminRoutes);
 
-// 404 Route Not Found
+// Catch-all 404 handler (returns JSON error)
 app.use('*', (req, res) => {
   res.status(404).json({
     success: false,
     message: `API endpoint '${req.originalUrl}' does not exist on JobNexa server.`,
+    availableEndpoints: {
+      health: '/api/health',
+      auth: '/api/auth/login',
+      jobs: '/api/jobs',
+    },
   });
 });
 

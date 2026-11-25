@@ -1,3 +1,4 @@
+import mongoose from 'mongoose';
 import Job from '../models/Job.js';
 import JobAlert from '../models/JobAlert.js';
 import Notification from '../models/Notification.js';
@@ -64,6 +65,16 @@ export const syncAllJobs = async (options = {}) => {
   }
 
   // 3. Upsert to MongoDB using bulkWrite
+  if (mongoose.connection.readyState !== 1) {
+    console.warn('[JobNexa Sync Engine] Database not connected (readyState != 1). Postponing job sync batch.');
+    return {
+      success: false,
+      message: 'Database not connected. Sync batch postponed.',
+      sourceStats,
+      timeTakenMs: Date.now() - startTime,
+    };
+  }
+
   const bulkOps = uniqueJobs.map((job) => ({
     updateOne: {
       filter: { source: job.source, externalId: job.externalId },

@@ -1,4 +1,12 @@
 {
+  "name": "jobnexa-root",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "start": "node backend/server.js",
+    "build": "cd backend && npm install",
+    "backend": "cd backend && npm start"
+  },
   "dependencies": {
     "cloudinary": "^2.11.0",
     "multer": "^2.5.0"
