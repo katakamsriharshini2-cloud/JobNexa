@@ -1,10 +1,17 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Search, MapPin, Briefcase, Filter } from 'lucide-react';
 
 const SearchBar = ({ onSearch, initialValues = {} }) => {
   const [keyword, setKeyword] = useState(initialValues.keyword || '');
   const [location, setLocation] = useState(initialValues.location || '');
   const [jobType, setJobType] = useState(initialValues.jobType || '');
+
+  // Synchronize state if URL query params change (e.g. on Clear Filters or city pill click)
+  useEffect(() => {
+    setKeyword(initialValues.keyword || '');
+    setLocation(initialValues.location || '');
+    setJobType(initialValues.jobType || '');
+  }, [initialValues.keyword, initialValues.location, initialValues.jobType]);
 
   const handleSubmit = (e) => {
     e.preventDefault();

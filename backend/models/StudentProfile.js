@@ -50,6 +50,26 @@ const studentProfileSchema = new mongoose.Schema(
       type: String,
       trim: true,
     },
+    hasResumeUploaded: {
+      type: Boolean,
+      default: false,
+    },
+    resumeName: {
+      type: String,
+      trim: true,
+    },
+    resumeUrl: {
+      type: String,
+      trim: true,
+    },
+    profilePicture: {
+      type: String,
+      trim: true,
+    },
+    profilePicturePublicId: {
+      type: String,
+      trim: true,
+    },
     profileCompletion: {
       type: Number,
       default: 20,
@@ -68,11 +88,12 @@ studentProfileSchema.methods.calculateCompletion = function () {
   if (this.fullName) score += 10;
   if (this.phone) score += 10;
   if (this.college) score += 10;
-  if (this.degree) score += 10;
-  if (this.branch) score += 10;
+  if (this.degree) score += 5;
+  if (this.branch) score += 5;
   if (this.skills && this.skills.length > 0) score += 15;
+  if (this.hasResumeUploaded) score += 15;
   if (this.experience) score += 5;
-  if (this.linkedinUrl || this.githubUrl) score += 10;
+  if (this.linkedinUrl || this.githubUrl) score += 5;
   this.profileCompletion = Math.min(100, score);
   return this.profileCompletion;
 };

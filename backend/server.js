@@ -42,6 +42,7 @@ app.use(
 // CORS configuration supporting dynamic client origins
 const allowedOrigins = [
   process.env.CLIENT_URL,
+  process.env.FRONTEND_URL,
   'http://localhost:5173',
   'http://localhost:3000',
   'http://127.0.0.1:5173',
@@ -133,16 +134,30 @@ app.use(errorHandler);
 const PORT = process.env.PORT || 5000;
 
 connectDB().then(() => {
-  app.listen(PORT, () => {
-    console.log(`====================================================`);
-    console.log(`🚀 JOBNEXA BACKEND RUNNING ON PORT: ${PORT}`);
-    console.log(`📡 Health Check: http://localhost:${PORT}/api/health`);
-    console.log(`🌐 Environment:  ${process.env.NODE_ENV || 'development'}`);
-    console.log(`====================================================`);
+  const startServer = (portToUse) => {
+    const serverInstance = app
+      .listen(portToUse, () => {
+        console.log(`====================================================`);
+        console.log(`🚀 JOBNEXA BACKEND RUNNING ON PORT: ${portToUse}`);
+        console.log(`📡 Health Check: http://localhost:${portToUse}/api/health`);
+        console.log(`🌐 Environment:  ${process.env.NODE_ENV || 'development'}`);
+        console.log(`====================================================`);
 
-    // Initialize real-time job synchronization cron engine
-    initJobSyncCron();
-  });
+        // Initialize real-time job synchronization cron engine
+        initJobSyncCron();
+      })
+      .on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+          const nextPort = Number(portToUse) + 1;
+          console.warn(`[JobNexa Port Warning] Port ${portToUse} is currently occupied or reserved. Switching automatically to port ${nextPort}...`);
+          startServer(nextPort);
+        } else {
+          console.error('[JobNexa Server Error]:', err.message);
+        }
+      });
+  };
+
+  startServer(PORT);
 });
 
 export default app;

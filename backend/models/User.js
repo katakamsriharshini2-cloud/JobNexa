@@ -42,6 +42,25 @@ const userSchema = new mongoose.Schema(
       type: Boolean,
       default: true, // Recruiter accounts may be moderated by admin
     },
+    phone: {
+      type: String,
+      trim: true,
+    },
+    isEmailVerified: {
+      type: Boolean,
+      default: true, // Default to true for instant seamless access
+    },
+    emailVerificationToken: String,
+    resetPasswordToken: String,
+    resetPasswordExpire: Date,
+    avatar: {
+      type: String,
+      trim: true,
+    },
+    avatarPublicId: {
+      type: String,
+      trim: true,
+    },
   },
   {
     timestamps: true,

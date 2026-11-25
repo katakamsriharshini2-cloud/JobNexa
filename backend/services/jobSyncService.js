@@ -67,7 +67,7 @@ export const syncAllJobs = async (options = {}) => {
   const bulkOps = uniqueJobs.map((job) => ({
     updateOne: {
       filter: { source: job.source, externalId: job.externalId },
-      update: { $set: job },
+      update: { $set: { ...job, isActive: true, country: 'India' } },
       upsert: true,
     },
   }));

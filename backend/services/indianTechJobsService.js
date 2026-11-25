@@ -7,7 +7,7 @@
  */
 
 export const getCuratedIndianJobs = () => {
-  return [
+  const jobs = [
     // ==========================================
     // HYDERABAD
     // ==========================================
@@ -385,6 +385,14 @@ Requirements:
       description: `Build robust logistics, merchant order tracking, and restaurant discovery engines in Gurgaon.`,
     },
   ];
+
+  return jobs.map((j, idx) => ({
+    _id: j._id || `674052f588aa4b23d0a1b${String(idx + 1).padStart(3, '0')}`,
+    ...j,
+    isActive: true,
+    country: 'India',
+    createdAt: j.createdAt || new Date(Date.now() - idx * 3600000),
+  }));
 };
 
 export default getCuratedIndianJobs;

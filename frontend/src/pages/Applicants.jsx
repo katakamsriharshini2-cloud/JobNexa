@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { applicationService } from '../services/applicationService';
 import { jobService } from '../services/jobService';
+import { resumeService } from '../services/resumeService';
 import Loading from '../components/Loading';
 import {
   Users,
@@ -222,15 +223,15 @@ const Applicants = () => {
                   </button>
 
                   {/* View/Download Resume */}
-                  {app.resume?.fileUrl ? (
+                  {app.resume ? (
                     <a
-                      href={app.resume.fileUrl}
+                      href={resumeService.getResumeUrl(app.resume.fileUrl, app.resume._id)}
                       target="_blank"
                       rel="noreferrer"
                       className="px-3 py-2 rounded-xl bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 font-bold text-xs hover:bg-blue-100 transition-colors flex items-center space-x-1"
                     >
                       <Download className="w-3.5 h-3.5" />
-                      <span>Resume</span>
+                      <span>View Resume</span>
                     </a>
                   ) : (
                     <span className="text-[11px] text-slate-400 italic">No resume attached</span>

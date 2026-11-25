@@ -1,5 +1,6 @@
 import StudentProfile from '../models/StudentProfile.js';
 import User from '../models/User.js';
+import { uploadImageToCloudinary, deleteFromCloudinary } from '../config/cloudinary.js';
 
 /**
  * @desc    Get logged in student profile details
@@ -80,6 +81,85 @@ export const updateStudentProfile = async (req, res, next) => {
       message: 'Profile updated successfully.',
       data: profile,
       profileCompletion: profile.profileCompletion,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Upload or replace candidate profile avatar picture
+ * @route   POST /api/students/avatar
+ * @access  Private (Student)
+ */
+export const uploadProfilePicture = async (req, res, next) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({
+        success: false,
+        message: 'No image file provided. Please attach a JPG, PNG, or WebP image.',
+      });
+    }
+
+    let profile = await StudentProfile.findOne({ user: req.user.id });
+    if (!profile) {
+      profile = new StudentProfile({ user: req.user.id });
+    }
+
+    // Delete existing old avatar from Cloudinary if replacing
+    if (profile.profilePicturePublicId) {
+      await deleteFromCloudinary(profile.profilePicturePublicId, 'image');
+    }
+
+    const { buffer, originalname } = req.file;
+    const uploadRes = await uploadImageToCloudinary(buffer, originalname, 'jobnexa_profiles');
+
+    profile.profilePicture = uploadRes.secure_url;
+    profile.profilePicturePublicId = uploadRes.public_id;
+    profile.calculateCompletion();
+    await profile.save();
+
+    // Update user model avatar as well
+    await User.findByIdAndUpdate(req.user.id, {
+      avatar: uploadRes.secure_url,
+      avatarPublicId: uploadRes.public_id,
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture uploaded successfully.',
+      avatarUrl: uploadRes.secure_url,
+      data: profile,
+    });
+  } catch (error) {
+    next(error);
+  }
+};
+
+/**
+ * @desc    Delete candidate profile picture
+ * @route   DELETE /api/students/avatar
+ * @access  Private (Student)
+ */
+export const deleteProfilePicture = async (req, res, next) => {
+  try {
+    const profile = await StudentProfile.findOne({ user: req.user.id });
+    if (profile && profile.profilePicturePublicId) {
+      await deleteFromCloudinary(profile.profilePicturePublicId, 'image');
+      profile.profilePicture = '';
+      profile.profilePicturePublicId = '';
+      profile.calculateCompletion();
+      await profile.save();
+    }
+
+    await User.findByIdAndUpdate(req.user.id, {
+      avatar: '',
+      avatarPublicId: '',
+    });
+
+    res.status(200).json({
+      success: true,
+      message: 'Profile picture removed successfully.',
     });
   } catch (error) {
     next(error);

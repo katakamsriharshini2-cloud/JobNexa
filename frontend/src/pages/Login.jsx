@@ -2,7 +2,17 @@ import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import { authService } from '../services/authService';
-import { Briefcase, Lock, Mail, ArrowRight, AlertCircle, Sparkles } from 'lucide-react';
+import {
+  Briefcase,
+  Lock,
+  Mail,
+  ArrowRight,
+  AlertCircle,
+  Sparkles,
+  KeyRound,
+  CheckCircle2,
+  X,
+} from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -11,6 +21,16 @@ const Login = () => {
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
+
+  // Forgot password modal state
+  const [forgotModalOpen, setForgotModalOpen] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState('');
+  const [resetToken, setResetToken] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmNewPassword, setConfirmNewPassword] = useState('');
+  const [forgotStep, setForgotStep] = useState(1); // 1: request, 2: reset
+  const [forgotLoading, setForgotLoading] = useState(false);
+  const [forgotMsg, setForgotMsg] = useState({ type: '', text: '' });
 
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -55,6 +75,82 @@ const Login = () => {
     }
   };
 
+  // Forgot Password Step 1: Request Token
+  const handleForgotRequest = async (e) => {
+    e.preventDefault();
+    if (!forgotEmail) {
+      setForgotMsg({ type: 'error', text: 'Please enter your registered email address.' });
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      setForgotMsg({ type: '', text: '' });
+      const res = await authService.forgotPassword(forgotEmail);
+      if (res.success) {
+        setForgotStep(2);
+        if (res.resetToken) {
+          setResetToken(res.resetToken);
+        }
+        setForgotMsg({
+          type: 'success',
+          text: 'Reset token generated! Enter your new password below.',
+        });
+      } else {
+        setForgotMsg({ type: 'error', text: res.message || 'Failed to process request.' });
+      }
+    } catch (err) {
+      setForgotMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'No user registered with this email address.',
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password Step 2: Reset Password
+  const handleResetSubmit = async (e) => {
+    e.preventDefault();
+    if (newPassword !== confirmNewPassword) {
+      setForgotMsg({ type: 'error', text: 'Passwords do not match.' });
+      return;
+    }
+    if (newPassword.length < 6) {
+      setForgotMsg({ type: 'error', text: 'Password must be at least 6 characters.' });
+      return;
+    }
+
+    try {
+      setForgotLoading(true);
+      setForgotMsg({ type: '', text: '' });
+      const res = await authService.resetPassword(resetToken, newPassword);
+      if (res.success && res.token && res.user) {
+        setForgotMsg({ type: 'success', text: 'Password reset successful! Logging you in...' });
+        setTimeout(() => {
+          login(res.token, res.user);
+          setForgotModalOpen(false);
+          if (res.user.role === 'recruiter') {
+            navigate('/recruiter/dashboard');
+          } else if (res.user.role === 'admin') {
+            navigate('/admin/dashboard');
+          } else {
+            navigate('/student/dashboard');
+          }
+        }, 1200);
+      } else {
+        setForgotMsg({ type: 'error', text: res.message || 'Password reset failed.' });
+      }
+    } catch (err) {
+      setForgotMsg({
+        type: 'error',
+        text: err.response?.data?.message || 'Invalid or expired reset token.',
+      });
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   // Demo prefill helper for easy demonstration
   const handlePrefill = (email, password) => {
     setFormData({ email, password });
@@ -76,37 +172,6 @@ const Login = () => {
           <p className="mt-1 text-sm text-slate-500 dark:text-slate-400">
             Sign in to access your student, recruiter, or admin dashboard.
           </p>
-        </div>
-
-        {/* Demo Credentials Box for College Viva/Professor Demonstration */}
-        <div className="bg-blue-50 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 rounded-2xl p-4">
-          <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
-            <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Quick Demo Credentials (Click to prefill)</span>
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <button
-              type="button"
-              onClick={() => handlePrefill('student@jobnexa.dev', 'Student@123')}
-              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 text-center transition-all"
-            >
-              Student Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePrefill('recruiter@jobnexa.dev', 'Recruiter@123')}
-              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-600 text-center transition-all"
-            >
-              Recruiter Demo
-            </button>
-            <button
-              type="button"
-              onClick={() => handlePrefill('admin@jobnexa.dev', 'Admin@123')}
-              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-indigo-500 hover:text-indigo-600 text-center transition-all"
-            >
-              Admin Demo
-            </button>
-          </div>
         </div>
 
         {/* Error Alert */}
@@ -142,9 +207,23 @@ const Login = () => {
 
             {/* Password input */}
             <div>
-              <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1.5">
+                <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                  Password
+                </label>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotModalOpen(true);
+                    setForgotStep(1);
+                    setForgotEmail(formData.email || '');
+                    setForgotMsg({ type: '', text: '' });
+                  }}
+                  className="text-xs font-semibold text-blue-600 dark:text-blue-400 hover:underline"
+                >
+                  Forgot Password?
+                </button>
+              </div>
               <div className="relative">
                 <Lock className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
                 <input
@@ -179,7 +258,155 @@ const Login = () => {
           </div>
         </div>
 
+        {/* Demo Credentials Box for Testing / Viva Demonstration */}
+        <div className="bg-blue-50 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 rounded-2xl p-4">
+          <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
+            <Sparkles className="w-4 h-4 text-amber-500" />
+            <span>Quick Demo Credentials (Click to prefill)</span>
+          </div>
+          <div className="grid grid-cols-3 gap-2">
+            <button
+              type="button"
+              onClick={() => handlePrefill('student@jobnexa.dev', 'Student@123')}
+              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 text-center transition-all"
+            >
+              Student Demo
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePrefill('recruiter@jobnexa.dev', 'Recruiter@123')}
+              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-600 text-center transition-all"
+            >
+              Recruiter Demo
+            </button>
+            <button
+              type="button"
+              onClick={() => handlePrefill('admin@jobnexa.dev', 'Admin@123')}
+              className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-indigo-500 hover:text-indigo-600 text-center transition-all"
+            >
+              Admin Demo
+            </button>
+          </div>
+        </div>
+
       </div>
+
+      {/* FORGOT PASSWORD MODAL */}
+      {forgotModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <div className="flex items-center space-x-2">
+                <KeyRound className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">Reset Password</h3>
+              </div>
+              <button
+                onClick={() => setForgotModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-white"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+
+            {forgotMsg.text && (
+              <div
+                className={`p-3 rounded-xl text-xs font-semibold flex items-center space-x-2 ${
+                  forgotMsg.type === 'success'
+                    ? 'bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 text-emerald-700 dark:text-emerald-300'
+                    : 'bg-rose-50 dark:bg-rose-950/40 border border-rose-200 text-rose-700 dark:text-rose-300'
+                }`}
+              >
+                {forgotMsg.type === 'success' ? (
+                  <CheckCircle2 className="w-4 h-4 flex-shrink-0" />
+                ) : (
+                  <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                )}
+                <span>{forgotMsg.text}</span>
+              </div>
+            )}
+
+            {forgotStep === 1 ? (
+              <form onSubmit={handleForgotRequest} className="space-y-4">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Enter your registered JobNexa email address to generate a password reset authorization code.
+                </p>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    Registered Email
+                  </label>
+                  <input
+                    type="email"
+                    required
+                    value={forgotEmail}
+                    onChange={(e) => setForgotEmail(e.target.value)}
+                    placeholder="name@example.com"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full py-2.5 bg-blue-600 hover:bg-blue-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50"
+                >
+                  {forgotLoading ? 'Processing...' : 'Generate Reset Code'}
+                </button>
+              </form>
+            ) : (
+              <form onSubmit={handleResetSubmit} className="space-y-3">
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Reset Token / Code
+                  </label>
+                  <input
+                    type="text"
+                    required
+                    value={resetToken}
+                    onChange={(e) => setResetToken(e.target.value)}
+                    placeholder="Enter reset token"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500 font-mono"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={newPassword}
+                    onChange={(e) => setNewPassword(e.target.value)}
+                    placeholder="Minimum 6 characters"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1">
+                    Confirm New Password
+                  </label>
+                  <input
+                    type="password"
+                    required
+                    minLength={6}
+                    value={confirmNewPassword}
+                    onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    placeholder="Re-enter new password"
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  />
+                </div>
+                <button
+                  type="submit"
+                  disabled={forgotLoading}
+                  className="w-full py-2.5 bg-gradient-to-r from-blue-600 to-purple-600 hover:from-blue-700 hover:to-purple-700 text-white font-bold text-xs rounded-xl shadow-md transition-all disabled:opacity-50"
+                >
+                  {forgotLoading ? 'Updating Password...' : 'Save New Password & Sign In'}
+                </button>
+              </form>
+            )}
+          </div>
+        </div>
+      )}
+
     </div>
   );
 };

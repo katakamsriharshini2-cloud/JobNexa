@@ -5,7 +5,7 @@ import mongoose from 'mongoose';
  */
 export const connectDB = async () => {
   try {
-    const connStr = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jobnexa';
+    const connStr = process.env.MONGO_URI || process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jobnexa';
     
     // Connection options for optimal performance
     const conn = await mongoose.connect(connStr, {

@@ -1,189 +1,210 @@
-# 💼 JOBNEXA – Connect. Apply. Achieve.
-### Full-Stack Job Alert and Resume Portal
-**Academic Project for Web Technologies and Mobile Programming**
+# 💼 JobNexa – Full-Stack Recruitment & Cloud Job Portal
 
-[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![React](https://img.shields.io/badge/Frontend-React%2018-61DAFB?logo=react)](https://react.dev/)
-[![Node.js](https://img.shields.io/badge/Backend-Node.js%20Express-339933?logo=node.js)](https://nodejs.org/)
+> **Connect. Apply. Achieve.**  
+> A full-stack, enterprise-grade cloud recruitment platform connecting **Students / Job Seekers**, **Corporate Recruiters**, and **Administrators**.
+
+[![React](https://img.shields.io/badge/Frontend-React%2018%20%2B%20Vite-61DAFB?logo=react)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js%20%2B%20Express-339933?logo=node.js)](https://nodejs.org/)
 [![MongoDB Atlas](https://img.shields.io/badge/Database-MongoDB%20Atlas-47A248?logo=mongodb)](https://www.mongodb.com/atlas)
-[![Render](https://img.shields.io/badge/Deployment-Render-46E3B7?logo=render)](https://render.com)
-[![Cloudinary](https://img.shields.io/badge/Resume%20Storage-Cloudinary-3448C5?logo=cloudinary)](https://cloudinary.com)
+[![Cloudinary](https://img.shields.io/badge/Cloud%20Storage-Cloudinary-3448C5?logo=cloudinary)](https://cloudinary.com)
+[![Vercel](https://img.shields.io/badge/Frontend%20Hosting-Vercel-000000?logo=vercel)](https://vercel.com)
+[![Render](https://img.shields.io/badge/Backend%20Hosting-Render-46E3B7?logo=render)](https://render.com)
 
 ---
 
-## 🌟 Introduction & Project Overview
+## 🏗️ System Architecture & Separation
 
-**JobNexa** is a modern, responsive, and secure full-stack recruitment portal that connects **Students/Job Seekers**, **Corporate Recruiters**, and **Placement Administrators** through one centralized platform.
+JobNexa is built with strict separation of concerns into independent frontend and backend services:
 
-Designed specifically to meet the rigorous criteria of undergraduate university capstone evaluations, JobNexa features:
-- **Strict Full-Stack Separation:** Completely independent `frontend/` (React + Vite) and `backend/` (Node.js + Express) codebases.
-- **Skill-Based Matching Algorithm:** A mathematical algorithm calculating real-time candidate compatibility scores against job requirements.
-- **Persistent Cloud Resume Management:** Direct upload of PDF/DOCX resumes to Cloudinary cloud storage with metadata tracking in MongoDB.
-- **In-App Job Alerts & Notifications:** Automated notification triggers whenever a newly posted job matches a student's preferences.
-- **Complete Recruitment Pipeline:** Seamless tracking from application submission to shortlisting, video interview scheduling, and final decision.
-- **Dual Deployment on Render:** React frontend deployed as a Render Static Site and Node.js backend deployed as a Render Web Service.
-
----
-
-## 🚀 Quick Demo Credentials (For College Professor Evaluation)
-
-You can instantly log in to any role using the pre-configured accounts:
-
-| Portal | Role | Demo Email | Demo Password | Key Features to Demonstrate |
-| :--- | :--- | :--- | :--- | :--- |
-| **Student** | Candidate | `student@jobnexa.dev` | `Student@123` | Skill match scores, resume upload, job applications, saved jobs, alerts |
-| **Recruiter** | Employer | `recruiter@jobnexa.dev` | `Recruiter@123` | Post vacancies, review applicants, download resumes, schedule interviews |
-| **Admin** | System Admin | `admin@jobnexa.dev` | `Admin@123` | Platform analytics, user account moderation, job posting moderation |
-
-*(Clicking the **"Quick Demo Credentials"** buttons on the Login page automatically pre-fills these inputs).*
-
----
-
-## 🛠️ Technology Stack
-
-| Layer | Technologies Used |
-| :--- | :--- |
-| **Frontend** | React 18, Vite, React Router DOM v6, Tailwind CSS, Recharts, Lucide React, Axios |
-| **Backend** | Node.js, Express.js, RESTful APIs, MVC Architecture |
-| **Database** | MongoDB Atlas, Mongoose ODM (10 distinct collections, compound unique indexes) |
-| **Authentication** | JSON Web Tokens (JWT), bcryptjs password hashing (Salt: 10 rounds) |
-| **Cloud Storage** | Cloudinary persistent cloud storage for PDF/DOCX resumes |
-| **Deployment** | Render Static Site (Frontend) & Render Web Service (Backend) |
-| **Security** | Helmet HTTP headers, CORS whitelisting, Express Rate Limit, Input sanitization |
-
----
-
-## 📁 Project Directory Structure
-
-```
+```text
 JobNexa/
-│
-├── frontend/                     # React.js Single Page Application
-│   ├── public/                   # Static assets & JobNexa SVG logo
+├── frontend/                     # React 18 SPA (Vite, TailwindCSS, Axios)
 │   ├── src/
-│   │   ├── components/           # Reusable UI components (Navbar, JobCard, SearchBar, etc.)
-│   │   ├── context/              # Context API (AuthContext, ThemeContext, NotificationContext)
-│   │   ├── layouts/              # Role-specific dashboard layouts (Student, Recruiter, Admin)
-│   │   ├── pages/                # Public and protected portal pages
-│   │   ├── services/             # Axios API integration modules
-│   │   ├── App.jsx               # Client-side routes & guards
-│   │   ├── main.jsx              # Application entry point
-│   │   └── index.css             # Tailwind base & custom styles
-│   ├── index.html
-│   ├── package.json
-│   ├── vite.config.js
-│   └── tailwind.config.js
+│   │   ├── components/           # Reusable UI components (JobCard, SearchBar, Navbar, Modals)
+│   │   ├── context/              # Global Auth & Theme context
+│   │   ├── pages/                # FindJobs, Dashboards, ResumeUpload, Register, Login
+│   │   └── services/             # Centralized API service callers (auth, jobs, resumes, applications)
+│   ├── public/                   # Static assets & favicons
+│   ├── package.json              # Frontend scripts & dependencies
+│   ├── vite.config.js            # Vite build configuration
+│   ├── vercel.json               # Vercel SPA routing & rewrites configuration
+│   └── .env.example              # Frontend environment variable template
 │
-├── backend/                      # Node.js & Express REST API Server
-│   ├── config/                   # MongoDB Atlas & Cloudinary connections
-│   ├── controllers/              # Business logic controllers (Auth, Jobs, Apps, Resumes)
-│   ├── middleware/               # Auth, Role (RBAC), Upload (Multer), and Error handlers
-│   ├── models/                   # 10 Mongoose schemas (User, Job, Application, Resume, etc.)
-│   ├── routes/                   # Modular Express API routes
-│   ├── scripts/                  # Initial admin and demo seed script (createAdmin.js)
-│   ├── utils/                    # Job match algorithm & JWT generator
-│   ├── server.js                 # Express server entry point
-│   ├── package.json
-│   └── .env.example
+├── backend/                      # Node.js + Express.js REST API
+│   ├── config/                   # MongoDB Atlas & Cloudinary SDK configurations
+│   ├── controllers/              # Business logic (auth, jobs, resumes, applications, students)
+│   ├── middleware/               # Auth protection (JWT), role validation, multer upload filters
+│   ├── models/                   # Mongoose schemas (User, StudentProfile, RecruiterProfile, Job, Application, Resume)
+│   ├── routes/                   # Express REST route handlers
+│   ├── services/                 # Curated Indian jobs & background sync engine
+│   ├── utils/                    # Deduplication, token generation, match algorithm
+│   ├── package.json              # Backend dependencies & npm scripts
+│   ├── render.yaml               # Render Infrastructure-as-Code blueprint
+│   ├── server.js                 # Express application entrypoint
+│   └── .env.example              # Backend environment variable template
 │
-├── render.yaml                   # Root Render Blueprint configuration
-├── PROJECT_EXPLANATION.md        # Comprehensive architecture & logic explanation
-├── VIVA_QUESTIONS.md             # 45 beginner-friendly viva questions & answers
-├── API_DOCUMENTATION.md          # REST API endpoints, schemas & payloads
-├── DEPLOYMENT_GUIDE.md           # Step-by-step Render and Atlas deployment guide
-├── PROJECT_REPORT.md             # Full academic project report for college submission
-└── .gitignore
+├── .gitignore                    # Root git exclusion rules (credentials, node_modules)
+└── README.md                     # Comprehensive documentation
 ```
 
 ---
 
-## 💻 Local Execution Guide (VS Code)
+## ⚡ Core Features
 
-### Prerequisites:
-- **Node.js** (v18 or higher)
-- **npm** (v9 or higher)
-- **VS Code**
-
-### Step 1: Open Project in VS Code
-Open the `JOB PORTAL` folder in VS Code.
-
-### Step 2: Open Two Separate Terminals
-In VS Code, press ``Ctrl + ` `` to open the terminal. Click the **+** or **Split** icon to create two separate terminals.
+1. **Cloud Resume & Profile Management (Cloudinary):**
+   - Direct cloud storage of candidate resumes (PDF, DOCX) and profile pictures (JPG, PNG, WebP).
+   - In-browser document preview, replacement, and secure download.
+   - Authorized access control: candidate resumes are private and only viewable by authorized recruiters who received an application.
+2. **Indian Tech Hub Job Search & Filtering:**
+   - Case-insensitive, multi-field regex search across title, skills, company, category, and description.
+   - Filter chips for major Indian tech hubs: **Hyderabad, Warangal, Bengaluru, Chennai, Mumbai, Pune, Delhi NCR, and Remote**.
+   - Filters for Job Type (Full-time, Part-time, Internship, Remote) and Experience Level.
+   - Instant "Clear Filters" reset without stale state bugs.
+3. **Authentication & Multi-Role Authorization:**
+   - Real user registration and login flows with email validation, bcrypt password hashing (10 salt rounds), and JWT sessions.
+   - Student registration includes full name, real email, phone, college/university, and technical skills.
+   - Recruiter registration includes recruiter name, company name, official email, and phone.
+   - Built-in "Forgot Password" token generation and reset workflow.
+   - Pre-configured demo buttons remain available as optional helpers for quick evaluations.
+4. **Interactive Dashboards:**
+   - **Student Dashboard:** Active resume card, skills widget, profile completion dial, job recommendations, and applied jobs with live status badges (`Applied`, `Shortlisted`, `Interview Scheduled`, `Selected`, `Rejected`).
+   - **Recruiter Dashboard:** Post vacancies, edit/delete listings, review applicants, download resumes, and update application status.
+   - **Admin Dashboard:** Platform metrics, account moderation (suspend/activate), and job moderation.
 
 ---
 
-### Terminal 1: Backend Server
+## 🔑 Environment Variables Reference
 
-```bash
-# Navigate to backend directory
-cd backend
+### Backend (`backend/.env`)
+```env
+# MongoDB Atlas Database URI
+MONGO_URI=mongodb+srv://<username>:<password>@cluster0.mongodb.net/jobnexa?retryWrites=true&w=majority
 
-# Install dependencies (only required first time)
+# JWT Authentication
+JWT_SECRET=jobnexa_super_secure_jwt_secret_token_2026
+JWT_EXPIRE=7d
+
+# Cloudinary Storage Credentials
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+
+# Frontend Allowed Origin (Production Vercel URL or Localhost)
+FRONTEND_URL=https://your-jobnexa-frontend.vercel.app
+
+# Optional Initial Admin Seed
+ADMIN_NAME=JobNexa Administrator
+ADMIN_EMAIL=admin@jobnexa.dev
+ADMIN_PASSWORD=Admin@123
+
+# Server Port & Mode
+PORT=5000
+NODE_ENV=production
+```
+
+### Frontend (`frontend/.env`)
+```env
+# Backend REST API endpoint (points to Render in production, localhost in development)
+VITE_API_BASE_URL=https://your-render-backend-url.onrender.com/api
+```
+
+---
+
+## 💻 Local Development Setup
+
+### 1. Clone & Install Dependencies
+Open two terminals in VS Code:
+
+**Terminal 1 (Backend):**
+```powershell
+cd "backend"
 npm install
-
-# (Optional) Seed the database with Admin and Demo accounts
-npm run seed:admin
-
-# Start backend server in development mode
 npm run dev
 ```
+*Backend runs on:* `http://localhost:5000`  
+*Health Check:* `http://localhost:5000/api/health`
 
-* Backend will run at: `http://localhost:5000`
-* Health check endpoint: `http://localhost:5000/api/health`
-
----
-
-### Terminal 2: Frontend Client
-
-```bash
-# Navigate to frontend directory
-cd frontend
-
-# Install dependencies (only required first time)
+**Terminal 2 (Frontend):**
+```powershell
+cd "frontend"
 npm install
-
-# Start Vite React development server
 npm run dev
 ```
-
-* Frontend will run at: `http://localhost:5173`
-* Open `http://localhost:5173` in your browser.
+*Frontend runs on:* `http://localhost:5173`
 
 ---
 
-## 🌐 Deploying to Render (Mandatory College Requirement)
+## 🚀 Cloud Deployment Guide
 
-Complete, foolproof instructions are documented in [DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md).
-
-### Summary:
-1. **Push to GitHub:**
-   ```bash
-   git init && git add . && git commit -m "feat: complete JobNexa portal"
-   git remote add origin https://github.com/YOUR_USERNAME/JobNexa.git
+### A. GitHub Setup & Push
+1. Create a new repository on your GitHub account (e.g. `JobNexa`).
+2. Run in project root:
+   ```powershell
+   git remote add origin https://github.com/<your-username>/JobNexa.git
+   git branch -M main
    git push -u origin main
    ```
-2. **Backend on Render:**
-   - Create **Render Web Service** connected to `backend/`.
-   - Set Build Command: `npm install`, Start Command: `npm start`.
-   - Configure Environment Variables (`MONGODB_URI`, `JWT_SECRET`, `CLIENT_URL`, `CLOUDINARY_*`).
-3. **Frontend on Render:**
-   - Create **Render Static Site** connected to `frontend/`.
-   - Set Build Command: `npm install && npm run build`, Publish Directory: `dist`.
-   - Set Environment Variable: `VITE_API_BASE_URL=https://YOUR-BACKEND.onrender.com/api`.
-   - Add Rewrite rule: Source `/*` $\rightarrow$ Destination `/index.html`.
+
+### B. MongoDB Atlas Cloud Database Setup
+1. Log in to [MongoDB Atlas](https://www.mongodb.com/atlas).
+2. Create a free shared cluster (M0).
+3. Under **Database Access**, create a database user (e.g., `jobnexa_admin`) with a secure password.
+4. Under **Network Access**, click **Add IP Address** and choose **Allow Access From Anywhere (`0.0.0.0/0`)** so Render can connect.
+5. Click **Connect** &rarr; **Drivers** &rarr; Copy the connection string.
+6. Replace `<password>` with your database user password and specify the database name as `/jobnexa`.
+
+### C. Cloudinary Setup (Resumes & Profile Pictures)
+1. Sign up for a free account at [Cloudinary](https://cloudinary.com).
+2. On your Cloudinary Dashboard, copy:
+   - **Cloud Name** (`CLOUDINARY_CLOUD_NAME`)
+   - **API Key** (`CLOUDINARY_API_KEY`)
+   - **API Secret** (`CLOUDINARY_API_SECRET`)
+3. Add these to your Render environment variables.
+
+### D. Backend Deployment on Render
+1. Go to [Render Dashboard](https://dashboard.render.com/) &rarr; **New +** &rarr; **Web Service**.
+2. Connect your GitHub repository `JobNexa`.
+3. Configure the service settings:
+   - **Name:** `jobnexa-backend`
+   - **Root Directory:** `backend`
+   - **Environment:** `Node`
+   - **Build Command:** `npm install`
+   - **Start Command:** `npm start`
+4. Under **Environment Variables**, add:
+   - `MONGO_URI`: *(Your MongoDB Atlas connection string)*
+   - `JWT_SECRET`: *(A secure secret key)*
+   - `CLOUDINARY_CLOUD_NAME`: *(Your Cloudinary cloud name)*
+   - `CLOUDINARY_API_KEY`: *(Your Cloudinary API key)*
+   - `CLOUDINARY_API_SECRET`: *(Your Cloudinary API secret)*
+   - `FRONTEND_URL`: *(Your Vercel frontend URL, e.g. `https://jobnexa.vercel.app`)*
+   - `NODE_ENV`: `production`
+5. Click **Create Web Service**. Once deployed, copy your backend URL (e.g. `https://jobnexa-backend.onrender.com`).
+
+### E. Frontend Deployment on Vercel
+1. Go to [Vercel Dashboard](https://vercel.com/dashboard) &rarr; **Add New...** &rarr; **Project**.
+2. Import your GitHub repository `JobNexa`.
+3. Configure project settings:
+   - **Framework Preset:** `Vite`
+   - **Root Directory:** Click Edit &rarr; select `frontend`.
+   - **Build Command:** `npm run build`
+   - **Output Directory:** `dist`
+4. Under **Environment Variables**, add:
+   - `VITE_API_BASE_URL`: `https://jobnexa-backend.onrender.com/api` *(your Render backend URL with `/api`)*
+5. Click **Deploy**. Vercel will build the frontend with `dist/` and automatic SPA routing configured via `vercel.json`.
 
 ---
 
-## 📚 Academic Documentation Deliverables
+## 🧪 Comprehensive Verification Checklist
 
-This repository contains comprehensive documentation files designed for university viva and project report submission:
-- **[PROJECT_EXPLANATION.md](PROJECT_EXPLANATION.md):** In-depth technical breakdown of the architecture, algorithms, and modules.
-- **[VIVA_QUESTIONS.md](VIVA_QUESTIONS.md):** 45 questions with clear answers covering React, Node, Express, MongoDB, JWT, and Cloud storage.
-- **[API_DOCUMENTATION.md](API_DOCUMENTATION.md):** Complete REST API contract with request/response schemas.
-- **[DEPLOYMENT_GUIDE.md](DEPLOYMENT_GUIDE.md):** Step-by-step cloud deployment instructions.
-- **[PROJECT_REPORT.md](PROJECT_REPORT.md):** Academic report complete with abstract, objectives, architecture, test cases, and conclusions.
-
----
-
-## 📄 License
-This project is open-source and developed for the academic course **Web Technologies and Mobile Programming**.
+| Test Scenario | Status | Verified Behavior |
+|---|---|---|
+| **Health Check** | Verified | `GET /api/health` returns status `OK` with database state and uptime |
+| **Student Registration** | Verified | Registers with real email, phone, college, and skills; hashes password with bcrypt |
+| **Recruiter Registration** | Verified | Registers with company name, recruiter name, official email, and phone |
+| **Admin Login** | Verified | Secure admin authentication with platform analytics |
+| **Resume Upload (Cloudinary)** | Verified | PDF & DOCX validation (max 5MB), uploaded to cloud, preview & download supported |
+| **Resume Replacement** | Verified | Swaps existing file, deletes previous document, updates student profile score (+15%) |
+| **Job Filtering & Search** | Verified | Case-insensitive multi-field search + Indian tech hub city pills without empty state bugs |
+| **Job Application** | Verified | Attaches default uploaded resume, notifies recruiter, updates applicant table |
+| **Recruiter Access** | Verified | Recruiter reviews applicants, opens authorized candidate resume, updates status |
+| **Vercel SPA Rewrites** | Verified | `vercel.json` rewrites ensure page refreshes never return 404 on deep links |
