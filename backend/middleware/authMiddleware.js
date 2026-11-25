@@ -51,4 +51,23 @@ export const protect = async (req, res, next) => {
   }
 };
 
+/**
+ * Role-Based Access Control (RBAC) Middleware
+ * Restricts access to specified roles: 'student', 'recruiter', 'admin'
+ * Supports: authorize('admin'), authorize('recruiter', 'admin')
+ */
+export const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user || !roles.includes(req.user.role)) {
+      return res.status(403).json({
+        success: false,
+        message: `Role (${req.user?.role || 'Guest'}) is not authorized to access this resource. Required: [${roles.join(', ')}]`,
+      });
+    }
+    next();
+  };
+};
+
+export const authorizeRoles = authorize;
+
 export default protect;
