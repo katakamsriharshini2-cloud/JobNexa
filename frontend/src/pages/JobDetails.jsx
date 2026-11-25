@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
-import { useParams, useNavigate, Link } from 'react-router-dom';
+import { useParams, useNavigate, useSearchParams, Link } from 'react-router-dom';
 import { jobService } from '../services/jobService';
 import { applicationService } from '../services/applicationService';
 import { resumeService } from '../services/resumeService';
 import { useAuth } from '../context/AuthContext';
+import api from '../services/api';
 import Loading from '../components/Loading';
 import {
   Building2,
@@ -20,12 +21,16 @@ import {
   ArrowLeft,
   Send,
   ExternalLink,
-  X
+  X,
+  Flag,
+  Globe,
+  ShieldAlert,
 } from 'lucide-react';
 
 const JobDetails = () => {
   const { id } = useParams();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
 
   const [job, setJob] = useState(null);
@@ -42,6 +47,15 @@ const JobDetails = () => {
   const [hasApplied, setHasApplied] = useState(false);
   const [applySuccess, setApplySuccess] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
+
+  // Report modal states
+  const [isReportModalOpen, setIsReportModalOpen] = useState(false);
+  const [reportReason, setReportReason] = useState('Suspicious / Scam');
+  const [reportDetails, setReportDetails] = useState('');
+  const [reportEmail, setReportEmail] = useState('');
+  const [reportLoading, setReportLoading] = useState(false);
+  const [reportSuccess, setReportSuccess] = useState(false);
+  const [reportError, setReportError] = useState('');
 
   // Clean raw HTML tags and compute concise short description
   const cleanedDescription = React.useMemo(() => {
@@ -83,6 +97,8 @@ const JobDetails = () => {
           setJob(res.data);
           if (res.hasApplied) {
             setHasApplied(true);
+          } else if (searchParams.get('apply') === 'true' && user?.role === 'student') {
+            handleOpenApplyModal();
           }
         } else {
           setError('Job not found.');
@@ -153,6 +169,33 @@ const JobDetails = () => {
       setApplyError(err.response?.data?.message || 'Error submitting application.');
     } finally {
       setApplyLoading(false);
+    }
+  };
+
+  const handleReportSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      setReportLoading(true);
+      setReportError('');
+      const res = await api.post(`/jobs/${id}/report`, {
+        reason: reportReason,
+        details: reportDetails,
+        email: reportEmail,
+      });
+      if (res.data && res.data.success) {
+        setReportSuccess(true);
+        setTimeout(() => {
+          setIsReportModalOpen(false);
+          setReportSuccess(false);
+          setReportDetails('');
+        }, 1800);
+      } else {
+        setReportError(res.data?.message || 'Failed to file report.');
+      }
+    } catch (err) {
+      setReportError(err.response?.data?.message || 'Failed to file report.');
+    } finally {
+      setReportLoading(false);
     }
   };
 
@@ -366,6 +409,14 @@ const JobDetails = () => {
 
             <div className="space-y-3 text-xs">
               <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                <span className="text-slate-400">Work Mode</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">{job.workMode || (job.isRemote ? 'Remote' : 'On-site')}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
+                <span className="text-slate-400">Category</span>
+                <span className="font-bold text-slate-700 dark:text-slate-200">{job.category || 'Engineering'}</span>
+              </div>
+              <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700/60">
                 <span className="text-slate-400">Experience</span>
                 <span className="font-bold text-slate-700 dark:text-slate-200">{job.experienceLevel || 'Fresher'}</span>
               </div>
@@ -386,6 +437,22 @@ const JobDetails = () => {
                 </span>
               </div>
             </div>
+          </div>
+
+          {/* Report Job Button */}
+          <div className="pt-2 text-center">
+            <button
+              type="button"
+              onClick={() => {
+                setIsReportModalOpen(true);
+                setReportSuccess(false);
+                setReportError('');
+              }}
+              className="inline-flex items-center space-x-1.5 text-xs font-semibold text-slate-400 hover:text-rose-500 transition-colors"
+            >
+              <Flag className="w-3.5 h-3.5" />
+              <span>Report this job listing</span>
+            </button>
           </div>
 
         </div>
@@ -516,6 +583,107 @@ const JobDetails = () => {
               </form>
             )}
 
+          </div>
+        </div>
+      )}
+
+      {/* REPORT JOB MODAL */}
+      {isReportModalOpen && (
+        <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-sm flex items-center justify-center p-4 animate-in fade-in duration-150">
+          <div className="bg-white dark:bg-slate-800 rounded-3xl max-w-md w-full p-6 shadow-2xl border border-slate-200 dark:border-slate-700 space-y-4">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-700 pb-3">
+              <div className="flex items-center space-x-2 text-rose-600 dark:text-rose-400">
+                <ShieldAlert className="w-5 h-5" />
+                <h3 className="font-extrabold text-base text-slate-900 dark:text-white">Report Job Listing</h3>
+              </div>
+              <button
+                type="button"
+                onClick={() => setIsReportModalOpen(false)}
+                className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+
+            {reportSuccess ? (
+              <div className="py-6 text-center space-y-2">
+                <CheckCircle className="w-10 h-10 text-emerald-500 mx-auto" />
+                <h4 className="font-bold text-sm text-slate-800 dark:text-white">Report Filed</h4>
+                <p className="text-xs text-slate-500">Thank you for keeping JobNexa safe. Our administration team will review this listing.</p>
+              </div>
+            ) : (
+              <form onSubmit={handleReportSubmit} className="space-y-4">
+                {reportError && (
+                  <div className="p-3 rounded-xl bg-rose-50 dark:bg-rose-950/40 text-xs text-rose-600 font-semibold flex items-center space-x-2">
+                    <AlertCircle className="w-4 h-4 flex-shrink-0" />
+                    <span>{reportError}</span>
+                  </div>
+                )}
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
+                    Reason *
+                  </label>
+                  <select
+                    value={reportReason}
+                    onChange={(e) => setReportReason(e.target.value)}
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  >
+                    <option value="Suspicious / Scam">Suspicious / Scam</option>
+                    <option value="Fake Job Listing">Fake Job Listing</option>
+                    <option value="Expired Posting">Expired Posting</option>
+                    <option value="Misleading Information">Misleading Information</option>
+                    <option value="Inappropriate Content">Inappropriate Content</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </div>
+
+                <div>
+                  <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
+                    Additional Details
+                  </label>
+                  <textarea
+                    rows={3}
+                    value={reportDetails}
+                    onChange={(e) => setReportDetails(e.target.value)}
+                    placeholder="Provide specific details regarding the violation..."
+                    className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                  />
+                </div>
+
+                {!isAuthenticated && (
+                  <div>
+                    <label className="block text-xs font-bold text-slate-600 dark:text-slate-300 uppercase mb-1">
+                      Your Email (Optional)
+                    </label>
+                    <input
+                      type="email"
+                      value={reportEmail}
+                      onChange={(e) => setReportEmail(e.target.value)}
+                      placeholder="email@example.com"
+                      className="w-full p-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-xs text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-rose-500"
+                    />
+                  </div>
+                )}
+
+                <div className="pt-2 flex justify-end space-x-2">
+                  <button
+                    type="button"
+                    onClick={() => setIsReportModalOpen(false)}
+                    className="px-4 py-2 rounded-xl text-xs font-bold text-slate-600 dark:text-slate-300 bg-slate-100 dark:bg-slate-700"
+                  >
+                    Cancel
+                  </button>
+                  <button
+                    type="submit"
+                    disabled={reportLoading}
+                    className="px-5 py-2 bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs rounded-xl shadow-md disabled:opacity-50"
+                  >
+                    {reportLoading ? 'Submitting...' : 'Submit Report'}
+                  </button>
+                </div>
+              </form>
+            )}
           </div>
         </div>
       )}

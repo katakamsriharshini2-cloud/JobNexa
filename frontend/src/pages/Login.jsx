@@ -12,13 +12,17 @@ import {
   KeyRound,
   CheckCircle2,
   X,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 
 const Login = () => {
   const [formData, setFormData] = useState({
-    email: '',
+    email: localStorage.getItem('jobnexa_remembered_email') || '',
     password: '',
   });
+  const [showPassword, setShowPassword] = useState(false);
+  const [rememberMe, setRememberMe] = useState(() => localStorage.getItem('jobnexa_remember_me') === 'true');
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -53,6 +57,13 @@ const Login = () => {
       setError('');
       const res = await authService.login(formData);
       if (res.success && res.token && res.user) {
+        if (rememberMe) {
+          localStorage.setItem('jobnexa_remember_me', 'true');
+          localStorage.setItem('jobnexa_remembered_email', formData.email);
+        } else {
+          localStorage.removeItem('jobnexa_remember_me');
+          localStorage.removeItem('jobnexa_remembered_email');
+        }
         login(res.token, res.user);
         
         // Redirect based on role or original intended location
@@ -227,15 +238,37 @@ const Login = () => {
               <div className="relative">
                 <Lock className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
                 <input
-                  type="password"
+                  type={showPassword ? 'text' : 'password'}
                   name="password"
                   value={formData.password}
                   onChange={handleChange}
                   required
                   placeholder="••••••••"
-                  className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                  className="w-full pl-11 pr-11 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                 />
+                <button
+                  type="button"
+                  onClick={() => setShowPassword(!showPassword)}
+                  className="absolute right-3.5 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 transition-colors"
+                  aria-label="Toggle password visibility"
+                >
+                  {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                </button>
               </div>
+            </div>
+
+            {/* Remember Me Checkbox */}
+            <div className="flex items-center">
+              <input
+                id="remember-me"
+                type="checkbox"
+                checked={rememberMe}
+                onChange={(e) => setRememberMe(e.target.checked)}
+                className="w-4 h-4 text-blue-600 bg-slate-100 border-slate-300 rounded focus:ring-blue-500 dark:focus:ring-blue-600 dark:ring-offset-slate-800 focus:ring-2 dark:bg-slate-700 dark:border-slate-600"
+              />
+              <label htmlFor="remember-me" className="ml-2 text-xs font-medium text-slate-600 dark:text-slate-400">
+                Remember me on this browser
+              </label>
             </div>
 
             {/* Submit button */}

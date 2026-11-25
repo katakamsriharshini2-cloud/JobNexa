@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { applicationService } from '../services/applicationService';
+import api from '../services/api';
 import Loading from '../components/Loading';
 import {
   Briefcase,
@@ -11,7 +12,9 @@ import {
   CheckCircle,
   XCircle,
   FileText,
-  AlertCircle
+  AlertCircle,
+  Check,
+  X,
 } from 'lucide-react';
 
 const MyApplications = () => {
@@ -35,6 +38,29 @@ const MyApplications = () => {
 
     fetchApplications();
   }, []);
+
+  const handleInterviewResponse = async (appId, response) => {
+    try {
+      const res = await api.put(`/applications/${appId}/interview-response`, { response });
+      if (res.data && res.data.success) {
+        setApplications((prev) =>
+          prev.map((a) =>
+            a._id === appId
+              ? {
+                  ...a,
+                  interview: {
+                    ...a.interview,
+                    studentResponse: response,
+                  },
+                }
+              : a
+          )
+        );
+      }
+    } catch (err) {
+      alert(err.response?.data?.message || 'Failed to update interview response.');
+    }
+  };
 
   const getStatusBadge = (status) => {
     switch (status) {
@@ -192,6 +218,41 @@ const MyApplications = () => {
                         Note: {app.interview.notes}
                       </p>
                     )}
+
+                    {/* Candidate Response Action */}
+                    <div className="pt-2 border-t border-purple-200/50 dark:border-purple-800/40 flex items-center justify-between">
+                      <span className="text-[11px] text-slate-500 dark:text-slate-400 font-semibold">
+                        Your RSVP Status:
+                      </span>
+                      {app.interview.studentResponse === 'Accepted' ? (
+                        <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 dark:bg-emerald-950/60 dark:text-emerald-300">
+                          <Check className="w-3.5 h-3.5" />
+                          <span>Invitation Accepted</span>
+                        </span>
+                      ) : app.interview.studentResponse === 'Declined' ? (
+                        <span className="inline-flex items-center space-x-1 px-3 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 dark:bg-rose-950/60 dark:text-rose-300">
+                          <X className="w-3.5 h-3.5" />
+                          <span>Invitation Declined</span>
+                        </span>
+                      ) : (
+                        <div className="flex items-center space-x-2">
+                          <button
+                            type="button"
+                            onClick={() => handleInterviewResponse(app._id, 'Accepted')}
+                            className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white rounded-lg text-xs font-bold shadow-sm transition-all"
+                          >
+                            Accept
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInterviewResponse(app._id, 'Declined')}
+                            className="px-3 py-1 bg-slate-200 dark:bg-slate-700 hover:bg-slate-300 dark:hover:bg-slate-600 text-slate-700 dark:text-slate-200 rounded-lg text-xs font-bold transition-all"
+                          >
+                            Decline
+                          </button>
+                        </div>
+                      )}
+                    </div>
                   </div>
                 )}
 

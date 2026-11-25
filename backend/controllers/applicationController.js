@@ -209,3 +209,55 @@ export const scheduleInterview = async (req, res, next) => {
     next(error);
   }
 };
+
+/**
+ * @desc    Student responds to interview invitation (Accept / Decline)
+ * @route   PUT /api/applications/:id/interview-response
+ * @access  Private (Student)
+ */
+export const respondToInterview = async (req, res, next) => {
+  try {
+    const { response } = req.body;
+    if (!['Accepted', 'Declined'].includes(response)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Response must be either Accepted or Declined.',
+      });
+    }
+
+    const application = await Application.findOne({
+      _id: req.params.id,
+      student: req.user.id,
+    }).populate('job');
+
+    if (!application) {
+      return res.status(404).json({ success: false, message: 'Application not found.' });
+    }
+
+    if (!application.interview) {
+      return res.status(400).json({ success: false, message: 'No interview scheduled for this application.' });
+    }
+
+    application.interview.studentResponse = response;
+    await application.save();
+
+    // Notify recruiter
+    if (application.job?.recruiter) {
+      await Notification.create({
+        user: application.job.recruiter,
+        title: `Interview Invitation ${response}`,
+        message: `${req.user.name} has ${response.toLowerCase()} the interview invitation for "${application.job.title}".`,
+        type: 'interview_response',
+        link: `/recruiter/applicants?jobId=${application.job._id}`,
+      });
+    }
+
+    res.status(200).json({
+      success: true,
+      message: `Interview invitation marked as ${response}.`,
+      data: application,
+    });
+  } catch (error) {
+    next(error);
+  }
+};

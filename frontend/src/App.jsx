@@ -12,6 +12,7 @@ import FindJobs from './pages/FindJobs';
 import JobDetails from './pages/JobDetails';
 import About from './pages/About';
 import Contact from './pages/Contact';
+import CareerResources from './pages/CareerResources';
 import NotFound from './pages/NotFound';
 
 // Layouts
@@ -96,6 +97,18 @@ function App() {
               <Navbar />
               <main className="flex-1">
                 <Contact />
+              </main>
+              <Footer />
+            </>
+          }
+        />
+        <Route
+          path="/resources"
+          element={
+            <>
+              <Navbar />
+              <main className="flex-1">
+                <CareerResources />
               </main>
               <Footer />
             </>

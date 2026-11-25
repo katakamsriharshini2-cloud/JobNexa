@@ -3,6 +3,8 @@ import Job from '../models/Job.js';
 import Application from '../models/Application.js';
 import StudentProfile from '../models/StudentProfile.js';
 import RecruiterProfile from '../models/RecruiterProfile.js';
+import JobReport from '../models/JobReport.js';
+import Feedback from '../models/Feedback.js';
 import { syncAllJobs } from '../services/jobSyncService.js';
 
 /**
@@ -18,9 +20,12 @@ export const getAdminDashboard = async (req, res, next) => {
     const totalApplications = await Application.countDocuments();
     const shortlisted = await Application.countDocuments({ status: 'Shortlisted' });
     const selected = await Application.countDocuments({ status: 'Selected' });
+    const pendingReports = await JobReport.countDocuments({ status: 'pending' });
 
     const users = await User.find().select('-password').sort({ createdAt: -1 }).limit(50);
     const jobs = await Job.find().sort({ createdAt: -1 }).limit(50);
+    const reports = await JobReport.find().populate('job', 'title companyName').sort({ createdAt: -1 }).limit(30);
+    const feedback = await Feedback.find().sort({ createdAt: -1 }).limit(30);
 
     res.status(200).json({
       success: true,
@@ -31,9 +36,12 @@ export const getAdminDashboard = async (req, res, next) => {
         totalApplications,
         shortlisted,
         selected,
+        pendingReports,
       },
       users,
       jobs,
+      reports,
+      feedback,
     });
   } catch (error) {
     next(error);

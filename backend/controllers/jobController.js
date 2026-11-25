@@ -95,12 +95,19 @@ export const getJobs = async (req, res, next) => {
           }
         }
 
+        if (req.query.workMode && req.query.workMode !== 'All' && req.query.workMode !== '') {
+          query.workMode = req.query.workMode;
+        }
+
         if (andConditions.length > 0) {
           query.$and = andConditions;
         }
 
         let sort = { createdAt: -1 };
         if (sortBy === 'salary') sort = { salaryRange: -1 };
+        else if (sortBy === 'popular') sort = { applicantCount: -1 };
+        else if (sortBy === 'relevance' && keyword) sort = { score: { $meta: 'textScore' } };
+        else sort = { createdAt: -1 };
 
         const skip = (Number(page) - 1) * Number(limit);
         total = await Job.countDocuments(query);

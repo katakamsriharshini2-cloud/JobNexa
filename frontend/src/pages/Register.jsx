@@ -14,10 +14,16 @@ import {
   ArrowRight,
   AlertCircle,
   CheckCircle2,
+  Eye,
+  EyeOff,
+  Globe,
+  MapPin,
 } from 'lucide-react';
 
 const Register = () => {
   const [role, setRole] = useState('student');
+  const [showPassword, setShowPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -26,10 +32,17 @@ const Register = () => {
     phone: '',
     // Student specific
     college: '',
+    degree: 'B.Tech / B.E.',
+    branch: 'Computer Science & Engineering',
+    graduationYear: '2025',
+    experience: 'Fresher / Entry-Level',
     skills: '',
     // Recruiter specific
     companyName: '',
     recruiterName: '',
+    companyWebsite: '',
+    industry: 'Software & Technology',
+    companyLocation: '',
   });
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -68,11 +81,18 @@ const Register = () => {
       if (role === 'student') {
         payload.name = formData.name;
         payload.college = formData.college;
+        payload.degree = formData.degree;
+        payload.branch = formData.branch;
+        payload.graduationYear = formData.graduationYear;
+        payload.experience = formData.experience;
         payload.skills = formData.skills;
       } else {
         payload.name = formData.recruiterName || formData.name;
         payload.recruiterName = formData.recruiterName || formData.name;
         payload.companyName = formData.companyName;
+        payload.companyWebsite = formData.companyWebsite;
+        payload.industry = formData.industry;
+        payload.companyLocation = formData.companyLocation;
       }
 
       const res = await authService.register(payload);
@@ -258,6 +278,80 @@ const Register = () => {
                     Used to automatically match and recommend relevant jobs to you.
                   </p>
                 </div>
+
+                {/* Degree & Branch */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Degree / Course
+                    </label>
+                    <select
+                      name="degree"
+                      value={formData.degree}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="B.Tech / B.E.">B.Tech / B.E.</option>
+                      <option value="M.Tech / M.E.">M.Tech / M.E.</option>
+                      <option value="MCA / BCA">MCA / BCA</option>
+                      <option value="B.Sc / M.Sc">B.Sc / M.Sc</option>
+                      <option value="MBA / BBA">MBA / BBA</option>
+                      <option value="Diploma">Diploma / Other</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Branch / Specialization
+                    </label>
+                    <input
+                      type="text"
+                      name="branch"
+                      value={formData.branch}
+                      onChange={handleChange}
+                      placeholder="e.g. CSE, IT, AI & ML, ECE"
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    />
+                  </div>
+                </div>
+
+                {/* Graduation Year & Experience */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Graduation Year
+                    </label>
+                    <select
+                      name="graduationYear"
+                      value={formData.graduationYear}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="2027">2027 (Undergrad)</option>
+                      <option value="2026">2026 (Undergrad)</option>
+                      <option value="2025">2025 (Final Year)</option>
+                      <option value="2024">2024 (Graduate)</option>
+                      <option value="2023">2023 or earlier</option>
+                    </select>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Experience Level
+                    </label>
+                    <select
+                      name="experience"
+                      value={formData.experience}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                    >
+                      <option value="Fresher / Entry-Level">Fresher / Entry-Level</option>
+                      <option value="Internship Experienced">Internship Experienced</option>
+                      <option value="1-2 Years">1-2 Years</option>
+                      <option value="2+ Years">2+ Years</option>
+                    </select>
+                  </div>
+                </div>
               </>
             )}
 
@@ -339,6 +433,64 @@ const Register = () => {
                     />
                   </div>
                 </div>
+
+                {/* Company Website & Industry */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Company Website
+                    </label>
+                    <div className="relative">
+                      <Globe className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
+                      <input
+                        type="url"
+                        name="companyWebsite"
+                        value={formData.companyWebsite}
+                        onChange={handleChange}
+                        placeholder="https://company.com"
+                        className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500"
+                      />
+                    </div>
+                  </div>
+
+                  <div>
+                    <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                      Industry
+                    </label>
+                    <select
+                      name="industry"
+                      value={formData.industry}
+                      onChange={handleChange}
+                      className="w-full px-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white focus:outline-none focus:ring-2 focus:ring-purple-500"
+                    >
+                      <option value="Software & Technology">Software & Technology</option>
+                      <option value="Information Technology & Services">IT Services</option>
+                      <option value="Fintech & Banking">Fintech & Banking</option>
+                      <option value="E-Commerce & Retail">E-Commerce</option>
+                      <option value="Healthcare & BioTech">Healthcare & BioTech</option>
+                      <option value="Consulting & Analytics">Consulting & Analytics</option>
+                      <option value="Other">Other Industry</option>
+                    </select>
+                  </div>
+                </div>
+
+                {/* Company Location */}
+                <div>
+                  <label className="block text-xs font-bold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-1.5">
+                    Company Location / City
+                  </label>
+                  <div className="relative">
+                    <MapPin className="w-5 h-5 text-slate-400 absolute left-3.5 top-3" />
+                    <input
+                      type="text"
+                      name="companyLocation"
+                      value={formData.companyLocation}
+                      onChange={handleChange}
+                      placeholder="e.g. Bengaluru, Hyderabad, Pune, Mumbai, Remote"
+                      className="w-full pl-11 pr-4 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-purple-500 transition-all"
+                    />
+                  </div>
+                </div>
               </>
             )}
 
@@ -351,14 +503,22 @@ const Register = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showPassword ? 'text' : 'password'}
                     name="password"
                     value={formData.password}
                     onChange={handleChange}
                     required
                     placeholder="Min 6 characters"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowPassword(!showPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    aria-label="Toggle password visibility"
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
 
@@ -369,14 +529,22 @@ const Register = () => {
                 <div className="relative">
                   <Lock className="w-4 h-4 text-slate-400 absolute left-3.5 top-3.5" />
                   <input
-                    type="password"
+                    type={showConfirmPassword ? 'text' : 'password'}
                     name="confirmPassword"
                     value={formData.confirmPassword}
                     onChange={handleChange}
                     required
                     placeholder="Confirm password"
-                    className="w-full pl-10 pr-3 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
+                    className="w-full pl-10 pr-10 py-2.5 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500 transition-all"
                   />
+                  <button
+                    type="button"
+                    onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                    className="absolute right-3 top-3 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+                    aria-label="Toggle confirm password visibility"
+                  >
+                    {showConfirmPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </button>
                 </div>
               </div>
             </div>

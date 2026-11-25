@@ -94,6 +94,16 @@ const Navbar = () => {
               About
             </Link>
             <Link
+              to="/resources"
+              className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
+                isActive('/resources')
+                  ? 'text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-slate-800'
+                  : 'text-slate-600 dark:text-slate-300 hover:text-blue-600 dark:hover:text-blue-400'
+              }`}
+            >
+              Resources
+            </Link>
+            <Link
               to="/contact"
               className={`px-3 py-2 rounded-lg text-sm font-medium transition-colors ${
                 isActive('/contact')
@@ -284,6 +294,13 @@ const Navbar = () => {
             className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
           >
             About
+          </Link>
+          <Link
+            to="/resources"
+            onClick={() => setMobileMenuOpen(false)}
+            className="block px-3 py-2 rounded-lg text-base font-medium text-slate-700 dark:text-slate-200 hover:bg-slate-50 dark:hover:bg-slate-800"
+          >
+            Resources
           </Link>
           <Link
             to="/contact"

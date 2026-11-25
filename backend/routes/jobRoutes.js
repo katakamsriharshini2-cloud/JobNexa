@@ -8,6 +8,7 @@ import {
   deleteJob,
   getRecruiterJobs,
 } from '../controllers/jobController.js';
+import { reportJob } from '../controllers/jobReportController.js';
 import protect from '../middleware/authMiddleware.js';
 import authorizeRoles from '../middleware/roleMiddleware.js';
 import jwt from 'jsonwebtoken';
@@ -33,6 +34,7 @@ router.get('/', optionalAuth, getJobs);
 router.get('/recommended', protect, authorizeRoles('student'), getRecommendedJobs);
 router.get('/recruiter/my-jobs', protect, authorizeRoles('recruiter'), getRecruiterJobs);
 router.get('/:id', optionalAuth, getJobById);
+router.post('/:id/report', optionalAuth, reportJob);
 
 router.post('/', protect, authorizeRoles('recruiter'), createJob);
 router.put('/:id', protect, authorizeRoles('recruiter', 'admin'), updateJob);

@@ -23,6 +23,7 @@ import notificationRoutes from './routes/notificationRoutes.js';
 import savedJobRoutes from './routes/savedJobRoutes.js';
 import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
+import feedbackRoutes from './routes/feedbackRoutes.js';
 
 // Load environment variables
 const __filename = fileURLToPath(import.meta.url);
@@ -131,6 +132,7 @@ app.use('/api/notifications', ensureDbConnected, notificationRoutes);
 app.use('/api/saved-jobs', ensureDbConnected, savedJobRoutes);
 app.use('/api/job-alerts', ensureDbConnected, jobAlertRoutes);
 app.use('/api/admin', ensureDbConnected, adminRoutes);
+app.use('/api/feedback', ensureDbConnected, feedbackRoutes);
 
 // Catch-all 404 handler (returns JSON error)
 app.use('*', (req, res) => {

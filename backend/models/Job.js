@@ -51,6 +51,34 @@ const jobSchema = new mongoose.Schema(
       default: 'India',
       index: true,
     },
+    workMode: {
+      type: String,
+      enum: ['Remote', 'Hybrid', 'On-site'],
+      default: 'On-site',
+      index: true,
+    },
+    responsibilities: {
+      type: [String],
+      default: [],
+    },
+    qualifications: {
+      type: [String],
+      default: [],
+    },
+    benefits: {
+      type: [String],
+      default: [],
+    },
+    companyLogo: {
+      type: String,
+      trim: true,
+    },
+    status: {
+      type: String,
+      enum: ['published', 'draft', 'closed'],
+      default: 'published',
+      index: true,
+    },
     isRemote: {
       type: Boolean,
       default: false,

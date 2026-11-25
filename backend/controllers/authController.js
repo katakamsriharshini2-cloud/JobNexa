@@ -23,7 +23,14 @@ export const register = async (req, res, next) => {
       skills,
       degree,
       branch,
+      graduationYear,
+      academicStatus,
+      experience,
       companyName,
+      companyWebsite,
+      companyDescription,
+      industry,
+      companyLocation,
     } = req.body;
 
     // Reject attempt to register as admin directly through public API
@@ -93,6 +100,8 @@ export const register = async (req, res, next) => {
         college: college ? college.trim() : undefined,
         degree: degree ? degree.trim() : undefined,
         branch: branch ? branch.trim() : undefined,
+        graduationYear: graduationYear ? graduationYear.trim() : undefined,
+        experience: experience ? experience.trim() : 'Fresher / Entry-Level',
         skills: parsedSkills,
       });
       studentProfile.calculateCompletion();
@@ -104,6 +113,8 @@ export const register = async (req, res, next) => {
         companyName: finalCompanyName,
         phone: phone ? phone.trim() : undefined,
         designation: 'Talent Acquisition Partner',
+        companyWebsite: companyWebsite ? companyWebsite.trim() : undefined,
+        companyDescription: companyDescription ? companyDescription.trim() : undefined,
       });
     }
 

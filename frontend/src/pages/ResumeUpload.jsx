@@ -1,7 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { resumeService } from '../services/resumeService';
+import api from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Loading from '../components/Loading';
 import ConfirmDialog from '../components/ConfirmDialog';
+import ResumeBuilder from '../components/ResumeBuilder';
 import {
   FileText,
   Upload,
@@ -16,9 +19,13 @@ import {
   RefreshCw,
   X,
   ExternalLink,
+  Sparkles,
 } from 'lucide-react';
 
 const ResumeUpload = () => {
+  const { user } = useAuth();
+  const [activeTab, setActiveTab] = useState('manage'); // 'manage' | 'builder'
+  const [studentProfile, setStudentProfile] = useState(null);
   const [resumes, setResumes] = useState([]);
   const [loading, setLoading] = useState(true);
   const [uploading, setUploading] = useState(false);
@@ -43,9 +50,15 @@ const ResumeUpload = () => {
   const fetchResumes = async () => {
     try {
       setLoading(true);
-      const res = await resumeService.getMyResumes();
-      if (res.success && res.data) {
-        setResumes(res.data);
+      const [res, profRes] = await Promise.allSettled([
+        resumeService.getMyResumes(),
+        api.get('/students/profile'),
+      ]);
+      if (res.status === 'fulfilled' && res.value.success && res.value.data) {
+        setResumes(res.value.data);
+      }
+      if (profRes.status === 'fulfilled' && profRes.value.data?.success) {
+        setStudentProfile(profRes.value.data.data);
       }
     } catch (err) {
       console.error('Error fetching resumes:', err);
@@ -182,7 +195,7 @@ const ResumeUpload = () => {
     <div className="max-w-4xl mx-auto space-y-8">
       
       {/* Page Header */}
-      <div>
+      <div className="print:hidden">
         <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center space-x-3">
           <FileText className="w-8 h-8 text-blue-600 dark:text-blue-400" />
           <span>Resume Management & Cloud Storage</span>
@@ -192,20 +205,52 @@ const ResumeUpload = () => {
         </p>
       </div>
 
-      {/* Notifications */}
-      {errorMsg && (
-        <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center space-x-3 text-xs font-semibold text-rose-700 dark:text-rose-300">
-          <AlertCircle className="w-5 h-5 flex-shrink-0" />
-          <span>{errorMsg}</span>
-        </div>
-      )}
+      {/* Tabs */}
+      <div className="flex space-x-2 border-b border-slate-200 dark:border-slate-700 pb-2 print:hidden">
+        <button
+          type="button"
+          onClick={() => setActiveTab('manage')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
+            activeTab === 'manage'
+              ? 'bg-blue-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <FileText className="w-4 h-4" />
+          <span>Uploaded Resumes ({resumes.length})</span>
+        </button>
+        <button
+          type="button"
+          onClick={() => setActiveTab('builder')}
+          className={`px-4 py-2 rounded-xl text-xs font-bold transition-all flex items-center space-x-2 ${
+            activeTab === 'builder'
+              ? 'bg-gradient-to-r from-blue-600 to-purple-600 text-white shadow-md'
+              : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800'
+          }`}
+        >
+          <Sparkles className="w-4 h-4 text-amber-400" />
+          <span>Smart Resume Builder & PDF Export</span>
+        </button>
+      </div>
 
-      {successMsg && (
-        <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center space-x-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
-          <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
-          <span>{successMsg}</span>
-        </div>
-      )}
+      {activeTab === 'builder' ? (
+        <ResumeBuilder studentProfile={studentProfile} user={user} />
+      ) : (
+        <>
+          {/* Notifications */}
+          {errorMsg && (
+            <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center space-x-3 text-xs font-semibold text-rose-700 dark:text-rose-300">
+              <AlertCircle className="w-5 h-5 flex-shrink-0" />
+              <span>{errorMsg}</span>
+            </div>
+          )}
+
+          {successMsg && (
+            <div className="p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center space-x-3 text-xs font-semibold text-emerald-700 dark:text-emerald-300">
+              <CheckCircle2 className="w-5 h-5 flex-shrink-0" />
+              <span>{successMsg}</span>
+            </div>
+          )}
 
       {/* Uploader Card */}
       <div className="bg-white dark:bg-slate-800 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-700 shadow-sm space-y-4">
@@ -374,6 +419,8 @@ const ResumeUpload = () => {
           </div>
         )}
       </div>
+      </>
+      )}
 
       {/* REPLACE RESUME MODAL */}
       {replaceModalOpen && (

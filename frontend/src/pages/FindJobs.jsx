@@ -8,6 +8,37 @@ import api from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import { Briefcase, Filter, Sparkles, X, ChevronLeft, ChevronRight } from 'lucide-react';
 
+const JOB_CATEGORIES = [
+  'All Categories',
+  'Software Development',
+  'Frontend Development',
+  'Backend Development',
+  'Full Stack Development',
+  'Data Science',
+  'Artificial Intelligence',
+  'Machine Learning',
+  'Cloud Computing',
+  'Cybersecurity',
+  'DevOps',
+  'Java Development',
+  'Python Development',
+  'Web Development',
+  'Mobile App Development',
+  'UI/UX Design',
+  'Database Administration',
+  'Networking',
+  'Business Analyst',
+  'Digital Marketing',
+  'Human Resources',
+  'Finance',
+  'Mechanical Engineering',
+  'Civil Engineering',
+  'Electrical Engineering',
+  'Electronics and Communication',
+  'Internships',
+  'Graduate/Fresher Jobs',
+];
+
 const FindJobs = () => {
   const [searchParams, setSearchParams] = useSearchParams();
   const { user, isAuthenticated } = useAuth();
@@ -24,6 +55,8 @@ const FindJobs = () => {
   const keyword = searchParams.get('keyword') || '';
   const location = searchParams.get('location') || '';
   const jobType = searchParams.get('jobType') || '';
+  const category = searchParams.get('category') || '';
+  const workMode = searchParams.get('workMode') || '';
   const [experienceLevel, setExperienceLevel] = useState(searchParams.get('experienceLevel') || '');
   const [sortBy, setSortBy] = useState('latest');
 
@@ -75,6 +108,8 @@ const FindJobs = () => {
           keyword,
           location,
           jobType,
+          category: category !== 'All Categories' ? category : '',
+          workMode: workMode !== 'All' ? workMode : '',
           experienceLevel,
           sortBy,
         };
@@ -93,15 +128,20 @@ const FindJobs = () => {
 
     fetchJobs();
     fetchSavedJobs();
-  }, [keyword, location, jobType, experienceLevel, sortBy, page]);
+  }, [keyword, location, jobType, category, workMode, experienceLevel, sortBy, page]);
 
   const handleSearch = (filters) => {
     setPage(1);
-    const newParams = new URLSearchParams();
+    const newParams = new URLSearchParams(searchParams);
     if (filters.keyword) newParams.set('keyword', filters.keyword);
+    else newParams.delete('keyword');
     if (filters.location) newParams.set('location', filters.location);
+    else newParams.delete('location');
     if (filters.jobType) newParams.set('jobType', filters.jobType);
+    else newParams.delete('jobType');
     if (experienceLevel) newParams.set('experienceLevel', experienceLevel);
+    if (category) newParams.set('category', category);
+    if (workMode) newParams.set('workMode', workMode);
     setSearchParams(newParams);
   };
 
@@ -163,6 +203,49 @@ const FindJobs = () => {
         {/* Filter Controls */}
         <div className="flex flex-wrap items-center gap-3">
           
+          {/* Category Filter */}
+          <div className="flex items-center space-x-1 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Category:</span>
+            <select
+              value={category || 'All Categories'}
+              onChange={(e) => {
+                const newParams = new URLSearchParams(searchParams);
+                if (e.target.value === 'All Categories') newParams.delete('category');
+                else newParams.set('category', e.target.value);
+                setSearchParams(newParams);
+                setPage(1);
+              }}
+              className="max-w-[150px] sm:max-w-[200px] truncate px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none"
+            >
+              {JOB_CATEGORIES.map((cat) => (
+                <option key={cat} value={cat}>
+                  {cat}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* Work Mode Filter */}
+          <div className="flex items-center space-x-1 text-xs">
+            <span className="text-slate-500 dark:text-slate-400 font-medium">Work Mode:</span>
+            <select
+              value={workMode || 'All'}
+              onChange={(e) => {
+                const newParams = new URLSearchParams(searchParams);
+                if (e.target.value === 'All') newParams.delete('workMode');
+                else newParams.set('workMode', e.target.value);
+                setSearchParams(newParams);
+                setPage(1);
+              }}
+              className="px-2.5 py-1.5 rounded-lg bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-semibold focus:outline-none"
+            >
+              <option value="All">All Modes</option>
+              <option value="Remote">Remote</option>
+              <option value="Hybrid">Hybrid</option>
+              <option value="On-site">On-site</option>
+            </select>
+          </div>
+
           {/* Experience Filter */}
           <div className="flex items-center space-x-1 text-xs">
             <span className="text-slate-500 dark:text-slate-400 font-medium">Experience:</span>
@@ -195,21 +278,23 @@ const FindJobs = () => {
             >
               <option value="latest">Latest First</option>
               <option value="salary">Highest Salary</option>
+              <option value="popular">Most Popular</option>
+              <option value="relevance">Best Relevance</option>
             </select>
           </div>
 
           {/* Clear Filters */}
-          {(keyword || location || jobType || experienceLevel) && (
+          {(keyword || location || jobType || experienceLevel || category || workMode) && (
             <button
               onClick={() => {
                 setExperienceLevel('');
                 setSearchParams({});
                 setPage(1);
               }}
-              className="text-xs text-rose-500 hover:text-rose-600 font-bold flex items-center space-x-1 px-2 py-1 rounded-lg hover:bg-rose-50 dark:hover:bg-rose-950/30"
+              className="text-xs text-rose-500 hover:text-rose-600 font-bold flex items-center space-x-1 px-2.5 py-1.5 rounded-lg bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900"
             >
               <X className="w-3.5 h-3.5" />
-              <span>Clear Filters</span>
+              <span>Clear All Filters</span>
             </button>
           )}
         </div>

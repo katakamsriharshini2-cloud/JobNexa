@@ -25,7 +25,7 @@ const applicationSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ['Applied', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Rejected'],
+      enum: ['Applied', 'Under Review', 'Shortlisted', 'Interview Scheduled', 'Selected', 'Rejected'],
       default: 'Applied',
       index: true,
     },
@@ -33,7 +33,13 @@ const applicationSchema = new mongoose.Schema(
       date: { type: Date },
       time: { type: String, trim: true },
       link: { type: String, trim: true },
+      type: { type: String, enum: ['Online', 'Offline'], default: 'Online' },
       notes: { type: String, trim: true },
+      studentResponse: {
+        type: String,
+        enum: ['Pending', 'Accepted', 'Declined'],
+        default: 'Pending',
+      },
     },
   },
   {
