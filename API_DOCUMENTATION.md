@@ -53,7 +53,7 @@
 ```json
 {
   "email": "student@jobnexa.dev",
-  "password": "Student@123"
+  "password": "<your-password>"
 }
 ```
 * **Success Response (200 OK):**

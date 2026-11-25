@@ -1,7 +1,9 @@
 import api from './api';
 
 const normalizeApiUrl = (url) => {
-  if (!url || typeof url !== 'string') return 'http://localhost:5000/api';
+  if (!url || typeof url !== 'string' || url.includes('localhost')) {
+    return '/api';
+  }
   const clean = url.trim().replace(/\/+$/, '');
   return clean.endsWith('/api') ? clean : `${clean}/api`;
 };

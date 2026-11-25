@@ -92,10 +92,10 @@ CLOUDINARY_API_SECRET=your_api_secret
 # Frontend Allowed Origin (Production Vercel URL or Localhost)
 FRONTEND_URL=https://your-jobnexa-frontend.vercel.app
 
-# Optional Initial Admin Seed
+# Optional Initial Admin Seed — set a strong password in your Render/environment dashboard
 ADMIN_NAME=JobNexa Administrator
 ADMIN_EMAIL=admin@jobnexa.dev
-ADMIN_PASSWORD=Admin@123
+ADMIN_PASSWORD=<set-a-strong-password-in-your-environment>
 
 # Server Port & Mode
 PORT=5000

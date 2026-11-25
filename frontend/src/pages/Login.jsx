@@ -162,9 +162,9 @@ const Login = () => {
     }
   };
 
-  // Demo prefill helper for easy demonstration
-  const handlePrefill = (email, password) => {
-    setFormData({ email, password });
+  // Demo prefill helper - fills email only; password must be entered manually for security
+  const handlePrefill = (email) => {
+    setFormData((prev) => ({ ...prev, email, password: '' }));
     setError('');
   };
 
@@ -295,31 +295,34 @@ const Login = () => {
         <div className="bg-blue-50 dark:bg-slate-800/80 border border-blue-200 dark:border-slate-700 rounded-2xl p-4">
           <div className="flex items-center space-x-1.5 text-xs font-bold text-blue-700 dark:text-blue-300 mb-2">
             <Sparkles className="w-4 h-4 text-amber-500" />
-            <span>Quick Demo Credentials (Click to prefill)</span>
+            <span>Quick Demo Access (Click to prefill email)</span>
           </div>
           <div className="grid grid-cols-3 gap-2">
             <button
               type="button"
-              onClick={() => handlePrefill('student@jobnexa.dev', 'Student@123')}
+              onClick={() => handlePrefill('student@jobnexa.dev')}
               className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-blue-500 hover:text-blue-600 text-center transition-all"
             >
               Student Demo
             </button>
             <button
               type="button"
-              onClick={() => handlePrefill('recruiter@jobnexa.dev', 'Recruiter@123')}
+              onClick={() => handlePrefill('recruiter@jobnexa.dev')}
               className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-purple-500 hover:text-purple-600 text-center transition-all"
             >
               Recruiter Demo
             </button>
             <button
               type="button"
-              onClick={() => handlePrefill('admin@jobnexa.dev', 'Admin@123')}
+              onClick={() => handlePrefill('admin@jobnexa.dev')}
               className="px-2.5 py-1.5 text-[11px] font-semibold bg-white dark:bg-slate-700 rounded-lg border border-slate-200 dark:border-slate-600 text-slate-700 dark:text-slate-200 hover:border-indigo-500 hover:text-indigo-600 text-center transition-all"
             >
               Admin Demo
             </button>
           </div>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 mt-2 text-center">
+            Enter your password to sign in to the prefilled account.
+          </p>
         </div>
 
       </div>

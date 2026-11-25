@@ -1,8 +1,12 @@
 import axios from 'axios';
 
-// Normalize API base URL: ensure it trims trailing slashes and appends /api if omitted
+// In production (Render/Vercel): VITE_API_BASE_URL is set to full backend URL e.g. https://xyz.onrender.com/api
+// In development: VITE_API_BASE_URL is undefined or localhost, and Vite's proxy forwards /api → localhost:5000/api
 const normalizeApiUrl = (url) => {
-  if (!url || typeof url !== 'string') return 'http://localhost:5000/api';
+  if (!url || typeof url !== 'string' || url.includes('localhost')) {
+    // Development mode: use relative path, Vite proxy handles forwarding to backend
+    return '/api';
+  }
   const clean = url.trim().replace(/\/+$/, '');
   return clean.endsWith('/api') ? clean : `${clean}/api`;
 };
