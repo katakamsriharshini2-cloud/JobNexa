@@ -176,16 +176,25 @@ const startServer = (portToUse) => {
     });
 };
 
-connectDB()
-  .then(() => {
-    startServer(PORT);
-  })
-  .catch((err) => {
-    console.error('[JobNexa Critical Error] Could not connect to MongoDB Atlas:', err.message);
-    if (process.env.NODE_ENV === 'production') {
-      console.warn('Backend server starting in recovery mode so health checks and diagnostics remain available.');
-    }
-    startServer(PORT);
-  });
+const isDirectRun =
+  !process.env.NO_AUTO_START &&
+  (!process.argv[1] ||
+    process.argv[1].endsWith('server.js') ||
+    process.argv[1].endsWith('server') ||
+    process.argv[1].includes('server.js'));
+
+if (isDirectRun) {
+  connectDB()
+    .then(() => {
+      startServer(PORT);
+    })
+    .catch((err) => {
+      console.error('[JobNexa Critical Error] Could not connect to MongoDB Atlas:', err.message);
+      if (process.env.NODE_ENV === 'production') {
+        console.warn('Backend server starting in recovery mode so health checks and diagnostics remain available.');
+      }
+      startServer(PORT);
+    });
+}
 
 export default app;
