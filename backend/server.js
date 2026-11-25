@@ -9,6 +9,7 @@ import mongoose from 'mongoose';
 
 import connectDB from './config/db.js';
 import errorHandler from './middleware/errorMiddleware.js';
+import ensureDbConnected from './middleware/dbCheckMiddleware.js';
 import { initJobSyncCron } from './jobs/syncCron.js';
 
 // Route imports
@@ -24,10 +25,10 @@ import jobAlertRoutes from './routes/jobAlertRoutes.js';
 import adminRoutes from './routes/adminRoutes.js';
 
 // Load environment variables
-dotenv.config();
-
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
+dotenv.config({ path: path.resolve(__dirname, '.env') });
+dotenv.config();
 
 // Initialize Express app
 const app = express();
@@ -87,9 +88,15 @@ app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
 // HEALTH CHECK ENDPOINT (MANDATORY REQUIREMENT FOR RENDER)
 // ============================================================
 app.get('/api/health', (req, res) => {
-  const dbStatus = mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected / Connecting';
-  res.status(200).json({
-    status: 'OK',
+  const isConnected = mongoose.connection.readyState === 1;
+  const dbStatus = isConnected
+    ? 'Connected'
+    : mongoose.connection.readyState === 2
+    ? 'Connecting'
+    : 'Disconnected';
+
+  res.status(isConnected ? 200 : 503).json({
+    status: isConnected ? 'OK' : 'DEGRADED',
     application: 'JobNexa – Connect. Apply. Achieve.',
     version: '1.0.0',
     timestamp: new Date().toISOString(),
@@ -107,17 +114,17 @@ app.get('/api', (req, res) => {
   });
 });
 
-// Mount Routes
-app.use('/api/auth', authRoutes);
-app.use('/api/students', studentRoutes);
-app.use('/api/recruiter', recruiterRoutes);
-app.use('/api/jobs', jobRoutes);
-app.use('/api/applications', applicationRoutes);
-app.use('/api/resumes', resumeRoutes);
-app.use('/api/notifications', notificationRoutes);
-app.use('/api/saved-jobs', savedJobRoutes);
-app.use('/api/job-alerts', jobAlertRoutes);
-app.use('/api/admin', adminRoutes);
+// Mount Routes (Routes requiring database use ensureDbConnected to prevent buffering timeout)
+app.use('/api/auth', ensureDbConnected, authRoutes);
+app.use('/api/students', ensureDbConnected, studentRoutes);
+app.use('/api/recruiter', ensureDbConnected, recruiterRoutes);
+app.use('/api/jobs', jobRoutes); // Has built-in resilient fallback if DB is connecting
+app.use('/api/applications', ensureDbConnected, applicationRoutes);
+app.use('/api/resumes', ensureDbConnected, resumeRoutes);
+app.use('/api/notifications', ensureDbConnected, notificationRoutes);
+app.use('/api/saved-jobs', ensureDbConnected, savedJobRoutes);
+app.use('/api/job-alerts', ensureDbConnected, jobAlertRoutes);
+app.use('/api/admin', ensureDbConnected, adminRoutes);
 
 // 404 Route Not Found
 app.use('*', (req, res) => {
@@ -133,31 +140,39 @@ app.use(errorHandler);
 // Connect Database & Start Server
 const PORT = process.env.PORT || 5000;
 
-connectDB().then(() => {
-  const startServer = (portToUse) => {
-    const serverInstance = app
-      .listen(portToUse, () => {
-        console.log(`====================================================`);
-        console.log(`🚀 JOBNEXA BACKEND RUNNING ON PORT: ${portToUse}`);
-        console.log(`📡 Health Check: http://localhost:${portToUse}/api/health`);
-        console.log(`🌐 Environment:  ${process.env.NODE_ENV || 'development'}`);
-        console.log(`====================================================`);
+const startServer = (portToUse) => {
+  app
+    .listen(portToUse, () => {
+      console.log(`====================================================`);
+      console.log(`🚀 JOBNEXA BACKEND RUNNING ON PORT: ${portToUse}`);
+      console.log(`📡 Health Check: http://localhost:${portToUse}/api/health`);
+      console.log(`🌐 Environment:  ${process.env.NODE_ENV || 'development'}`);
+      console.log(`====================================================`);
 
-        // Initialize real-time job synchronization cron engine
-        initJobSyncCron();
-      })
-      .on('error', (err) => {
-        if (err.code === 'EADDRINUSE') {
-          const nextPort = Number(portToUse) + 1;
-          console.warn(`[JobNexa Port Warning] Port ${portToUse} is currently occupied or reserved. Switching automatically to port ${nextPort}...`);
-          startServer(nextPort);
-        } else {
-          console.error('[JobNexa Server Error]:', err.message);
-        }
-      });
-  };
+      // Initialize real-time job synchronization cron engine
+      initJobSyncCron();
+    })
+    .on('error', (err) => {
+      if (err.code === 'EADDRINUSE') {
+        const nextPort = Number(portToUse) + 1;
+        console.warn(`[JobNexa Port Warning] Port ${portToUse} is occupied. Switching to ${nextPort}...`);
+        startServer(nextPort);
+      } else {
+        console.error('[JobNexa Server Error]:', err.message);
+      }
+    });
+};
 
-  startServer(PORT);
-});
+connectDB()
+  .then(() => {
+    startServer(PORT);
+  })
+  .catch((err) => {
+    console.error('[JobNexa Critical Error] Could not connect to MongoDB Atlas:', err.message);
+    if (process.env.NODE_ENV === 'production') {
+      console.warn('Backend server starting in recovery mode so health checks and diagnostics remain available.');
+    }
+    startServer(PORT);
+  });
 
 export default app;

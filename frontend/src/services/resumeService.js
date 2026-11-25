@@ -1,6 +1,12 @@
 import api from './api';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:5000/api';
+const normalizeApiUrl = (url) => {
+  if (!url || typeof url !== 'string') return 'http://localhost:5000/api';
+  const clean = url.trim().replace(/\/+$/, '');
+  return clean.endsWith('/api') ? clean : `${clean}/api`;
+};
+
+const API_BASE_URL = normalizeApiUrl(import.meta.env.VITE_API_BASE_URL);
 const BACKEND_ROOT = API_BASE_URL.replace(/\/api\/?$/, '');
 
 export const resumeService = {

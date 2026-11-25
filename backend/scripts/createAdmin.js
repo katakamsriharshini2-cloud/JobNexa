@@ -1,5 +1,6 @@
 import mongoose from 'mongoose';
 import dotenv from 'dotenv';
+import connectDB from '../config/db.js';
 import User from '../models/User.js';
 import StudentProfile from '../models/StudentProfile.js';
 import RecruiterProfile from '../models/RecruiterProfile.js';
@@ -9,9 +10,7 @@ dotenv.config();
 
 const seedInitialData = async () => {
   try {
-    const connStr = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/jobnexa';
-    console.log(`Connecting to database for seeding: ${connStr.replace(/:([^@]+)@/, ':****@')}`);
-    await mongoose.connect(connStr);
+    await connectDB();
 
     console.log('[JobNexa Seed] Database connected.');
 

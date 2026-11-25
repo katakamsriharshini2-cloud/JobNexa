@@ -123,6 +123,12 @@ export const register = async (req, res, next) => {
       },
     });
   } catch (error) {
+    if (error.name === 'MongooseError' || error.message?.includes('buffering timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection timeout. Please verify that your MongoDB Atlas cluster is online and MONGO_URL is set in Render.',
+      });
+    }
     next(error);
   }
 };
@@ -193,6 +199,12 @@ export const login = async (req, res, next) => {
       },
     });
   } catch (error) {
+    if (error.name === 'MongooseError' || error.message?.includes('buffering timed out')) {
+      return res.status(503).json({
+        success: false,
+        message: 'Database connection timeout. Please verify that your MongoDB Atlas cluster is online and MONGO_URL is set in Render.',
+      });
+    }
     next(error);
   }
 };
