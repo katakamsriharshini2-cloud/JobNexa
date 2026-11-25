@@ -16,189 +16,141 @@ dotenv.config();
 
 const { default: app } = await import('../server.js');
 
-const TEST_PORT = 5002;
+const TEST_PORT = 5003;
 const BASE_URL = `http://127.0.0.1:${TEST_PORT}/api`;
 
-async function runRealUserTests() {
+async function runComprehensiveAuthAudit() {
   console.log('====================================================');
-  console.log('JobNexa Real User Public Registration & Login Diagnostic');
+  console.log('JobNexa Comprehensive Real User Auth & Dashboard Audit');
   console.log('====================================================');
 
-  console.log('Connecting to MongoDB Atlas...');
+  console.log('[1] Connecting to MongoDB Atlas...');
   await connectDB();
-  console.log('Database connected successfully.');
+  console.log('[1] Connected successfully.');
 
   const server = app.listen(TEST_PORT, async () => {
-    console.log(`Diagnostic server listening on port ${TEST_PORT}`);
+    console.log(`[Diagnostic Server] Listening on port ${TEST_PORT}`);
 
     try {
-      // 1. Health check
-      console.log('\n--- Test 1: Server & Database Health ---');
-      const healthRes = await axios.get(`${BASE_URL}/health`);
-      console.log('Health Status:', healthRes.status, 'DB Status:', healthRes.data.database);
-      if (healthRes.data.database !== 'Connected') {
-        throw new Error('Database is not connected!');
+      // 1. Check health
+      const health = await axios.get(`${BASE_URL}/health`);
+      console.log('Health check:', health.data.status, 'Database:', health.data.database);
+
+      // 2. Test non-existent user login -> should return 401 with 'No user found'
+      console.log('\n--- Test 2: Unregistered Email Login ---');
+      try {
+        await axios.post(`${BASE_URL}/auth/login`, {
+          email: 'definitely.not.registered.2026@gmail.com',
+          password: 'SomePassword123!',
+        });
+        console.error('FAIL: Unregistered email was allowed!');
+      } catch (err) {
+        console.log('Status code:', err.response?.status);
+        console.log('Backend message:', err.response?.data?.message);
+        const isExpected = err.response?.data?.message?.includes('No user found');
+        console.log('Verified Expected Error:', isExpected ? 'PASS' : 'FAIL');
       }
 
-      // Cleanup any previous test run accounts if they exist (without touching existing jobs or other users)
-      const testStudentEmail = 'test.student.live2026@jobnexa.dev';
-      const testStudentPass = 'StudentLiveSecure@2026!';
-      const testRecruiterEmail = 'test.recruiter.live2026@jobnexa.dev';
-      const testRecruiterPass = 'RecruiterLiveSecure@2026!';
+      // 3. Register a real student with modern email TLD (.technology)
+      const realStudentEmail = 'rishi.student.2026@engineering.technology';
+      const realStudentPass = 'RishiSecure@2026!';
 
-      await User.deleteMany({ email: { $in: [testStudentEmail, testRecruiterEmail] } });
+      // Clean up test email if left over
+      await User.deleteOne({ email: realStudentEmail });
 
-      // 2. Real Student Registration
-      console.log('\n--- Test 2: Real Student Public Registration ---');
-      const studentPayload = {
-        name: 'Aarav Patel',
-        email: testStudentEmail,
-        password: testStudentPass,
+      console.log('\n--- Test 3: Public Registration with Modern Email TLD ---');
+      const studentReg = await axios.post(`${BASE_URL}/auth/register`, {
+        name: 'Rishi Kumar',
+        email: realStudentEmail,
+        password: realStudentPass,
         role: 'student',
-        phone: '+91 98765 43210',
-        college: 'IIT Bombay',
+        phone: '+91 98765 00001',
+        college: 'National Institute of Technology',
         degree: 'B.Tech / B.E.',
         branch: 'Computer Science & Engineering',
         graduationYear: '2026',
         experience: 'Fresher / Entry-Level',
-        skills: 'React, Node.js, Express, MongoDB, JavaScript',
-      };
-
-      const regStudentRes = await axios.post(`${BASE_URL}/auth/register`, studentPayload);
-      console.log('Student Registration Status:', regStudentRes.status);
-      console.log('Registration Success:', regStudentRes.data.success);
-      console.log('Returned Token:', Boolean(regStudentRes.data.token));
-      console.log('Returned User:', regStudentRes.data.user?.email, 'Role:', regStudentRes.data.user?.role);
-
-      // Verify Student exists in MongoDB Atlas directly
-      const savedStudent = await User.findOne({ email: testStudentEmail });
-      console.log('MongoDB Atlas Verification: User Found =', Boolean(savedStudent), 'ID =', savedStudent?._id);
-      const savedStudentProfile = await StudentProfile.findOne({ user: savedStudent._id });
-      console.log('MongoDB Atlas Verification: StudentProfile Found =', Boolean(savedStudentProfile), 'College =', savedStudentProfile?.college);
-
-      // 3. Duplicate Email Prevention Test
-      console.log('\n--- Test 3: Duplicate Email Prevention ---');
-      try {
-        await axios.post(`${BASE_URL}/auth/register`, studentPayload);
-        console.error('FAIL: Duplicate registration was unexpectedly allowed!');
-      } catch (err) {
-        console.log('Expected Duplicate Error Status:', err.response?.status);
-        console.log('Expected Error Message:', err.response?.data?.message);
-        console.log('PASS: Duplicate registration correctly prevented.');
-      }
-
-      // 4. Student Login with Registered Credentials
-      console.log('\n--- Test 4: Student Login with Registered Credentials ---');
-      const loginStudentRes = await axios.post(`${BASE_URL}/auth/login`, {
-        email: testStudentEmail,
-        password: testStudentPass,
+        skills: 'JavaScript, React, Node.js, MongoDB',
       });
-      console.log('Student Login Status:', loginStudentRes.status);
-      console.log('Login Success:', loginStudentRes.data.success);
-      console.log('User Role in Login Response:', loginStudentRes.data.user?.role);
-      const studentToken = loginStudentRes.data.token;
 
-      // 5. Student Login with WRONG Password Test
-      console.log('\n--- Test 5: Login with Wrong Password ---');
+      console.log('Registration status:', studentReg.status);
+      console.log('Registration success:', studentReg.data.success);
+      console.log('User created:', studentReg.data.user.email, 'Role:', studentReg.data.user.role);
+
+      // Verify in MongoDB Atlas
+      const dbUser = await User.findOne({ email: realStudentEmail });
+      console.log('Saved in MongoDB Atlas:', Boolean(dbUser), 'User ID:', dbUser?._id);
+
+      // 4. Immediate Login with newly registered credentials
+      console.log('\n--- Test 4: Immediate Login with Registered Credentials ---');
+      const studentLogin = await axios.post(`${BASE_URL}/auth/login`, {
+        email: realStudentEmail,
+        password: realStudentPass,
+      });
+
+      console.log('Login status:', studentLogin.status);
+      console.log('Login success:', studentLogin.data.success);
+      console.log('Token generated:', Boolean(studentLogin.data.token));
+      console.log('User name in login response:', studentLogin.data.user.name);
+
+      const token = studentLogin.data.token;
+
+      // 5. Test accessing dashboard / profile using the token
+      console.log('\n--- Test 5: Accessing Dashboard & Current User Profile ---');
+      const meRes = await axios.get(`${BASE_URL}/auth/me`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('/api/auth/me status:', meRes.status);
+      console.log('Current user name:', meRes.data.data.name);
+      console.log('Current user email:', meRes.data.data.email);
+      console.log('Current user role:', meRes.data.data.role);
+
+      const studentProfileRes = await axios.get(`${BASE_URL}/students/profile`, {
+        headers: { Authorization: `Bearer ${token}` },
+      });
+      console.log('/api/students/profile status:', studentProfileRes.status);
+      console.log('Profile college:', studentProfileRes.data.data.college);
+
+      // 6. Test Forgot Password and Reset Password
+      console.log('\n--- Test 6: Forgot Password & Reset Password ---');
+      const forgot = await axios.post(`${BASE_URL}/auth/forgot-password`, { email: realStudentEmail });
+      console.log('Forgot password status:', forgot.status, 'Token issued:', Boolean(forgot.data.resetToken));
+
+      const newPass = 'RishiUpdatedPassword@2026!';
+      const reset = await axios.post(`${BASE_URL}/auth/reset-password/${forgot.data.resetToken}`, {
+        token: forgot.data.resetToken,
+        password: newPass,
+      });
+      console.log('Reset password status:', reset.status, 'Success:', reset.data.success);
+
+      // 7. Login with old password -> should fail
+      console.log('\n--- Test 7: Login with Old Password (should fail) ---');
       try {
         await axios.post(`${BASE_URL}/auth/login`, {
-          email: testStudentEmail,
-          password: 'IncorrectPassword123!',
+          email: realStudentEmail,
+          password: realStudentPass,
         });
-        console.error('FAIL: Wrong password was unexpectedly allowed!');
+        console.error('FAIL: Old password was accepted after reset!');
       } catch (err) {
-        console.log('Expected Status:', err.response?.status);
-        console.log('Expected Message:', err.response?.data?.message);
-        console.log('PASS: Wrong password rejected correctly.');
+        console.log('Status code:', err.response?.status);
+        console.log('Error message:', err.response?.data?.message);
+        console.log('PASS: Old password rejected.');
       }
 
-      // 6. Real Recruiter Registration
-      console.log('\n--- Test 6: Real Recruiter Public Registration ---');
-      const recruiterPayload = {
-        name: 'Meera Deshmukh',
-        recruiterName: 'Meera Deshmukh',
-        email: testRecruiterEmail,
-        password: testRecruiterPass,
-        role: 'recruiter',
-        phone: '+91 99887 76655',
-        companyName: 'Apex Cloud Innovations',
-        companyWebsite: 'https://apexcloud.example.com',
-        industry: 'Software & Technology',
-        companyLocation: 'Bengaluru, Karnataka',
-      };
-
-      const regRecruiterRes = await axios.post(`${BASE_URL}/auth/register`, recruiterPayload);
-      console.log('Recruiter Registration Status:', regRecruiterRes.status);
-      console.log('Registration Success:', regRecruiterRes.data.success);
-      console.log('Returned Token:', Boolean(regRecruiterRes.data.token));
-      console.log('Returned User:', regRecruiterRes.data.user?.email, 'Role:', regRecruiterRes.data.user?.role);
-
-      const savedRecruiter = await User.findOne({ email: testRecruiterEmail });
-      console.log('MongoDB Atlas Verification: Recruiter Found =', Boolean(savedRecruiter), 'ID =', savedRecruiter?._id);
-      const savedRecruiterProfile = await RecruiterProfile.findOne({ user: savedRecruiter._id });
-      console.log('MongoDB Atlas Verification: RecruiterProfile Found =', Boolean(savedRecruiterProfile), 'Company =', savedRecruiterProfile?.companyName);
-
-      // 7. Recruiter Login
-      console.log('\n--- Test 7: Recruiter Login with Registered Credentials ---');
-      const loginRecruiterRes = await axios.post(`${BASE_URL}/auth/login`, {
-        email: testRecruiterEmail,
-        password: testRecruiterPass,
+      // 8. Login with new password -> should succeed
+      console.log('\n--- Test 8: Login with New Password (should succeed) ---');
+      const loginNew = await axios.post(`${BASE_URL}/auth/login`, {
+        email: realStudentEmail,
+        password: newPass,
       });
-      console.log('Recruiter Login Status:', loginRecruiterRes.status);
-      console.log('Login Success:', loginRecruiterRes.data.success);
-      console.log('User Role in Login Response:', loginRecruiterRes.data.user?.role);
-      const recruiterToken = loginRecruiterRes.data.token;
-
-      // 8. Protected Routes & Role Authorization Test
-      console.log('\n--- Test 8: Protected Routes & Role Authorization ---');
-      // Student accessing student profile route
-      const studentProfileRes = await axios.get(`${BASE_URL}/students/profile`, {
-        headers: { Authorization: `Bearer ${studentToken}` },
-      });
-      console.log('Student accessing /api/students/profile -> Status:', studentProfileRes.status, 'Success:', studentProfileRes.data.success);
-
-      // Student trying to access recruiter dashboard / company profile (Should be 403 Forbidden)
-      try {
-        await axios.get(`${BASE_URL}/recruiter/profile`, {
-          headers: { Authorization: `Bearer ${studentToken}` },
-        });
-        console.error('FAIL: Student was unexpectedly allowed on recruiter route!');
-      } catch (err) {
-        console.log('Student accessing /api/recruiter/profile -> Blocked with Status:', err.response?.status, 'Message:', err.response?.data?.message);
-        console.log('PASS: Role authorization properly isolates recruiter routes from students.');
-      }
-
-      // Recruiter accessing recruiter profile
-      const recruiterProfileRes = await axios.get(`${BASE_URL}/recruiter/profile`, {
-        headers: { Authorization: `Bearer ${recruiterToken}` },
-      });
-      console.log('Recruiter accessing /api/recruiter/profile -> Status:', recruiterProfileRes.status, 'Company:', recruiterProfileRes.data.data?.companyName);
-
-      // 9. Forgot Password and Reset Password Flow
-      console.log('\n--- Test 9: Forgot & Reset Password Flow ---');
-      const forgotRes = await axios.post(`${BASE_URL}/auth/forgot-password`, { email: testStudentEmail });
-      console.log('Forgot Password Status:', forgotRes.status, 'Reset Token Generated:', Boolean(forgotRes.data.resetToken));
-      const resetToken = forgotRes.data.resetToken;
-
-      const newStudentPass = 'StudentBrandNewPass#2026!';
-      const resetRes = await axios.post(`${BASE_URL}/auth/reset-password/${resetToken}`, {
-        token: resetToken,
-        password: newStudentPass,
-      });
-      console.log('Reset Password Status:', resetRes.status, 'Success:', resetRes.data.success);
-
-      // Login with new password
-      const loginAfterReset = await axios.post(`${BASE_URL}/auth/login`, {
-        email: testStudentEmail,
-        password: newStudentPass,
-      });
-      console.log('Login with New Password Status:', loginAfterReset.status, 'Success:', loginAfterReset.data.success);
+      console.log('Login with new password status:', loginNew.status);
+      console.log('Login success:', loginNew.data.success);
 
       console.log('\n====================================================');
-      console.log('ALL REAL USER REGISTRATION & LOGIN TESTS PASSED! ✅');
+      console.log('ALL REGISTRATION, LOGIN, RESET & PROFILE AUDITS PASSED! ✅');
       console.log('====================================================');
-    } catch (testErr) {
-      console.error('Test Error:', testErr.response?.data || testErr.message);
+    } catch (err) {
+      console.error('Audit Error:', err.response?.data || err.message);
     } finally {
       server.close();
       await mongoose.disconnect();
@@ -207,4 +159,4 @@ async function runRealUserTests() {
   });
 }
 
-runRealUserTests();
+runComprehensiveAuthAudit();

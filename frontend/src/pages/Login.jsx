@@ -183,9 +183,36 @@ const Login = () => {
 
         {/* Error Alert */}
         {error && (
-          <div className="p-3.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 flex items-center space-x-2 text-xs font-semibold text-rose-700 dark:text-rose-300 animate-in fade-in duration-150">
-            <AlertCircle className="w-4 h-4 flex-shrink-0" />
-            <span>{error}</span>
+          <div className="p-4 rounded-2xl bg-rose-50 dark:bg-rose-950/40 border border-rose-200 dark:border-rose-800 space-y-1.5 text-xs font-semibold text-rose-700 dark:text-rose-300 animate-in fade-in duration-150">
+            <div className="flex items-center space-x-2">
+              <AlertCircle className="w-4 h-4 flex-shrink-0" />
+              <span>{error}</span>
+            </div>
+            {error.toLowerCase().includes('no user found') && (
+              <div className="pl-6 text-[11px] text-rose-600 dark:text-rose-400 font-normal">
+                Haven't created an account yet?{' '}
+                <Link to="/register" className="font-bold underline text-blue-600 dark:text-blue-400 hover:text-blue-700">
+                  Click here to register your account
+                </Link>
+              </div>
+            )}
+            {error.toLowerCase().includes('incorrect password') && (
+              <div className="pl-6 text-[11px] text-rose-600 dark:text-rose-400 font-normal">
+                Forgotten your password?{' '}
+                <button
+                  type="button"
+                  onClick={() => {
+                    setForgotModalOpen(true);
+                    setForgotStep(1);
+                    setForgotEmail(formData.email || '');
+                    setForgotMsg({ type: '', text: '' });
+                  }}
+                  className="font-bold underline text-blue-600 dark:text-blue-400 hover:text-blue-700"
+                >
+                  Click here to reset it
+                </button>
+              </div>
+            )}
           </div>
         )}
 
